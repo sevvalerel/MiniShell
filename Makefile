@@ -1,0 +1,32 @@
+SRC = main.c execute.c cmd_built_in.c message.c
+
+CC = gcc 
+
+LIBFT = libft/libft.a
+
+MINISHELL = minishell 
+
+OBJ = $(SRC:.c=.o)
+
+CFLAGS = -g
+
+LDFLAGS = -lreadline
+
+all: $(MINISHELL)
+
+$(MINISHELL): $(OBJ)
+	make -C ./libft
+	make bonus -C ./libft
+	$(CC) $(CFLAGS) $(OBJ) $(LIBFT) $(LDFLAGS) -o $(MINISHELL)
+
+clean: 
+	make clean -C ./libft
+	rm -f $(OBJ)
+
+fclean: clean
+	make fclean -C ./libft
+	rm -f $(MINISHELL)
+
+re: fclean all
+
+.PHONY: all clean fclean re

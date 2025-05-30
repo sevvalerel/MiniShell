@@ -3,349 +3,291 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
+/*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:22:33 by bucolak           #+#    #+#             */
-/*   Updated: 2025/05/01 16:11:36 by seerel           ###   ########.fr       */
+/*   Updated: 2025/05/24 14:20:35 by bucolak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-// void free_split(char **str)
+int	is_in_quotes(const char *line, int pos)
+{
+	int		i;
+	int		in_quotes;
+	char	quote_type;
+
+	i = 0;
+	in_quotes = 0;
+	quote_type = 0;
+	while (i < pos)
+	{
+		if ((line[i] == '"' || line[i] == '\'') && !in_quotes)
+		{
+			in_quotes = 1;
+			quote_type = line[i];
+		}
+		else if (line[i] == quote_type)
+		{
+			in_quotes = 0;
+			quote_type = 0;
+		}
+		i++;
+	}
+	return (in_quotes);
+}
+void	pipe_parse(t_general **pipe_block, char *line)
+{
+	int			i;
+	int			start;
+	t_general	*tmp;
+	char		*trimmed;
+
+	i = 0;
+	start = 0;
+	tmp = *pipe_block;
+	while (line[i])
+	{
+		// Tırnak içinde değilsek ve pipe karakteri bulduysak böl
+		if (line[i] == '|' && !is_in_quotes(line, i))
+		{
+			trimmed = ft_substr(line, start, i - start);
+			tmp->blocs = ft_strtrim(trimmed, " ");
+			free(trimmed);
+			// Yeni node oluştur
+			tmp->next = create_general_node(tmp->dqm);
+			tmp = tmp->next;
+			start = i + 1;
+		}
+		i++;
+	}
+	// Son kısmı ekle
+	trimmed = ft_substr(line, start, i - start);
+	tmp->blocs = ft_strtrim(trimmed, " ");
+	free(trimmed);
+}
+
+// Tırnak kontrolü için yardımcı fonksiyon
+
+void	print_pipes(t_general *pipe_block)
+{
+	t_general	*tmp;
+	int			pipe_num;
+	int			i;
+
+	if (!pipe_block)
+		return ;
+	tmp = pipe_block;
+	pipe_num = 1;
+	printf("\n--- Parsed Pipes ---\n");
+	while (tmp)
+	{
+		if (tmp->blocs)
+		{
+			printf("Pipe %d: [%s]\n", pipe_num, tmp->blocs);
+			if (tmp->acces_args && tmp->acces_args->args)
+			{
+				i = 0;
+				printf("  Arguments:\n");
+				while (tmp->acces_args->args[i]
+					&& tmp->acces_args->args[i]->str)
+				{
+					printf("    Arg %d: %s", i + 1,
+							tmp->acces_args->args[i]->str);
+					printf(" (flag: %d)\n", tmp->acces_args->args[i]->flag);
+					i++;
+				}
+			}
+			pipe_num++;
+		}
+		tmp = tmp->next;
+	}
+	printf("-------------------\n");
+}
+// void	parse_input1(t_general *a)
 // {
-//     int i;
-//     if(!str)
-//         return;
-//     i = 0;
-//     while(str[i])
-//     {
-//         free(str[i]);
-//         i++;
-//     }
-//     free(str);
+// 	int		len;
+// 	int		in_quotes;
+// 	char	current_quote;
+// 	char	starting_quote;
+// 	int		length;
+
+// 	int i, s, k;
+// 	while (a)
+// 	{
+// 		i = 0;
+// 		k = 0;
+// 		while (a->blocs[i])
+// 		{
+// 			// Boşlukları atla
+// 			while (a->blocs[i] == ' ')
+// 				i++;
+// 			if (a->blocs[i] == '\0')
+// 				break ;
+// 			// Redirection operatorleri kontrolü
+// 			if (a->blocs[i] == '<' || a->blocs[i] == '>')
+// 			{
+// 				len = 1;
+// 				if (a->blocs[i] == a->blocs[i + 1]) // << veya >>
+// 					len = 2;
+// 				a->acces_args->args[k++] = create_arg(ft_substr(a->blocs, i,
+// 							len), 5); // flag 5: redirection
+// 				i += len;
+// 				continue ;
+// 			}
+// 			// Pipe operatorü kontrolü
+// 			if (a->blocs[i] == '|')
+// 			{
+// 				a->acces_args->args[k++] = create_arg(ft_substr(a->blocs, i, 1),
+// 														6); // flag 6: pipe
+// 				i++;
+// 				continue ;
+// 			}
+// 			// Argüman başı
+// 			s = i;
+// 			in_quotes = 0;
+// 			current_quote = 0;
+// 			starting_quote = 0;
+// 			int flag = 2; // varsayılan: normal argüman
+// 			// İlk karakter tırnak mı?
+// 			if (a->blocs[i] == '"' || a->blocs[i] == '\'')
+// 			{
+// 				starting_quote = a->blocs[i];
+// 				in_quotes = 1;
+// 				current_quote = a->blocs[i];
+// 				i++;
+// 			}
+// 			// Argüman uzunluğu belirleme
+// 			while (a->blocs[i])
+// 			{
+// 				if (!in_quotes && (a->blocs[i] == ' ' || a->blocs[i] == '<'
+// 						|| a->blocs[i] == '>' || a->blocs[i] == '|'))
+// 					break ;
+// 				if (a->blocs[i] == '"' || a->blocs[i] == '\'')
+// 				{
+// 					if (in_quotes && a->blocs[i] == current_quote)
+// 					{
+// 						in_quotes = 0;
+// 						current_quote = 0;
+// 					}
+// 					else if (!in_quotes)
+// 					{
+// 						in_quotes = 1;
+// 						current_quote = a->blocs[i];
+// 					}
+// 				}
+// 				i++;
+// 			}
+// 			length = i - s;
+// 			// Flag belirleme
+// 			if (starting_quote != 0 && a->blocs[i - 1] == starting_quote)
+// 			{
+// 				// düzgün kapatılmış tırnak
+// 				flag = (starting_quote == '"') ? 0 : 1;
+// 				s++;
+// 				length -= 2;
+// 			}
+// 			else if (starting_quote != 0)
+// 			{
+// 				// kapatılmamış tırnak
+// 				flag = 4;
+// 			}
+// 			else
+// 			{
+// 				// dış tırnak yok ama içeride tırnak varsa -> karmaşık
+// 				for (int j = s; j < s + length; j++)
+// 				{
+// 					if (a->blocs[j] == '"' || a->blocs[j] == '\'')
+// 					{
+// 						flag = 4;
+// 						break ;
+// 					}
+// 				}
+// 			}
+// 			a->acces_args->args[k++] = create_arg(ft_substr(a->blocs, s,
+// 						length), flag);
+// 		}
+// 		a->acces_args->args[k] = NULL;
+// 		a = a->next;
+// 	}
 // }
 
-// void exit_cmd(char **ar)
-// {
-//     if(ft_strncmp(ar[0], "exit", 4)==0)
-//     {
-//         free_split(ar);
-//         exit(0);
-//     }
-// }
-
-// void cd_cmd(char **ar)
-// {
-//     if(ft_strncmp(ar[0], "cd", 2)==0)
-//     {
-//         if(!ar[1])
-//         {
-//             char *line;
-//             line  = getenv("HOME");
-//             chdir(line);
-//         }
-//         else
-//         {
-//             chdir(ar[1]);
-//         }
-//     }
-// }
-
-// void pwd_cmd(char **ar)
-// {
-//     char *line;
-//     if(ft_strncmp(ar[0],"pwd",3)==0)
-//     {
-//         line = getcwd(NULL, 0);
-//         if(!line)
-//         {
-//             printf("Error\n");
-//             free(line);
-//             free_split(ar);
-//             exit(1);
-//         }
-//         printf("%s\n", line);
-//     }
-// }
-
-// void add_flag(t_general *a)
-// {
-//     int i = 1;
-//     a->args[0].flag = 1;
-//     while(a->args[i].str)
-//     {
-//         if (a->args[i].str[0] == '|')
-//         {
-//             a->args[i+1].flag = 1;
-//             i++;
-//         }
-//         else if(a->args[i].str[0] == '"')
-//             a->args[i].flag = 2;
-//         else if(a->args[i].str[0] == '\'')
-//             a->args[i].flag = 3;
-//         else
-//             a->args[i].flag = 0;
-//         i++;
-//     }
-//     echo_cont(a);
-// }
-// void echo_cont(t_general *a)
-// {
-//     int i = 0;
-//     while(a->args[i].str)
-//     {
-//         if(a->args[i].flag == 1)
-//         {
-//             if(ft_strncmp(a->args[i].str, "\"echo ", 6) == 0 || ft_strncmp(a->args[i].str, "\'echo '", 6) == 0)
-//             {
-//                 printf("Command 'echo ' not found, did you mean: command 'echo' from deb coreutils (8.32-4.1ubuntu1.2) Try: apt install <deb name>\n");
-//                 return ;
-//             }
-//         }
-//         i++;
-//     }
-//     dolar_control(a);
-// }
-
-t_arg *create_arg(const char *str, int flag)
+int	has_redireciton(t_general *pipe_blocks)
 {
-    t_arg *arg = malloc(sizeof(t_arg));
-    if (!arg)
-        return NULL;
-    arg->str = ft_strdup(str);
-    arg->flag = flag;
-    return arg;
+	int	i;
+
+	i = 0;
+	while (pipe_blocks->acces_args->args[i])
+	{
+		if (ft_strcmp(pipe_blocks->acces_args->args[i]->str, "<") == 0
+			|| ft_strcmp(pipe_blocks->acces_args->args[i]->str, "<<") == 0
+			|| ft_strcmp(pipe_blocks->acces_args->args[i]->str, ">") == 0
+			|| ft_strcmp(pipe_blocks->acces_args->args[i]->str, ">>") == 0)
+			return (1);
+		i++;
+	}
+	return (0);
 }
 
-t_pipeafter *create_pipeafter(void)
+void	signal_handler(void)
 {
-    t_pipeafter *pa = malloc(sizeof(t_pipeafter));
-    if (!pa)
-        return NULL;
-    pa->args = malloc(sizeof(t_arg *) * 100); // max arg 100 (geliştirilebilir)
-    if (!pa->args)
-    {
-        free(pa);
-        return NULL;
-    }
-    return pa;
+	struct sigaction	sa;
+
+	sa.sa_flags = SA_SIGINFO;
+	sa.sa_handler = handle_signal;
+	sigaction(SIGINT, &sa, NULL);
+	signal(SIGQUIT, SIG_IGN);
 }
 
-t_general *create_general_node(void)
+int	main(int argc, char *argv[], char **envp)
 {
-    t_general *node = malloc(sizeof(t_general));
-    if (!node)
-        return NULL;
-    node->acces_args = create_pipeafter();
-    node->blocs = NULL;
-    node->next = NULL;
-    return node;
-}
+	char		*line;
+	t_general	*pipe_blocs;
+	t_env		*env;
+	t_now		*get;
+	static int	first_run;
 
-void dolar_control(t_general *dolar)
-{
-    while (dolar)
-    {
-        int i = 0;
-        while (dolar->acces_args->args[i])
-        {
-
-            if ((dolar->acces_args->args[i]->flag == 0 || dolar->acces_args->args[i]->flag == 2) && ft_strchr(dolar->acces_args->args[i]->str, '$'))
-            {
-                char *control = ft_strchr(dolar->acces_args->args[i]->str, '$');
-                control = ft_strtrim(control, "\" ");
-                if (control && control[1] != ' ' && control[1] != '\0')
-                {
-                    control++;
-                    char *b = getenv(control);
-                    if (b)
-                        printf("%s\n", b);
-                }
-                // free(control);
-            }
-            i++;
-        }
-        dolar = dolar->next;
-    }
-}
-
-void pipe_parse(t_general **pipe_block, char *line)
-{
-    char **pipe_str = ft_split(line, '|');
-    int i = 0;
-    t_general *tmp = *pipe_block;
-
-    while (pipe_str[i])
-    {
-        if (pipe_str[i][0] != '\0')
-        {
-            tmp->blocs = ft_strtrim(pipe_str[i], " ");
-
-            if (pipe_str[i + 1])
-            {
-                tmp->next = create_general_node();
-                tmp = tmp->next;
-            }
-        }
-        i++;
-    }
-    free(pipe_str); // optional: split free ediliyorsa burada
-}
-
-void print_pipes(t_general *pipe_block)
-{
-    t_general *tmp;
-    int pipe_num;
-
-    if (!pipe_block)
-        return;
-
-    tmp = pipe_block;
-    pipe_num = 1;
-    printf("\n--- Parsed Pipes ---\n");
-
-    while (tmp)
-    {
-        if (tmp->blocs)
-        {
-            printf("Pipe %d: [%s]\n", pipe_num, tmp->blocs);
-
-            if (tmp->acces_args && tmp->acces_args->args)
-            {
-                int i = 0;
-                printf("  Arguments:\n");
-
-                while (tmp->acces_args->args[i] && tmp->acces_args->args[i]->str)
-                {
-                    printf("    Arg %d: %s", i + 1, tmp->acces_args->args[i]->str);
-                    printf(" (flag: %d)\n", tmp->acces_args->args[i]->flag);
-                    i++;
-                }
-            }
-            pipe_num++;
-        }
-        tmp = tmp->next;
-    }
-    printf("-------------------\n");
-}
-void parse_input(t_general *a)
-{
-    int i, s, k;
-
-    while (a)
-    {
-        i = 0;
-        k = 0;
-
-        while (a->blocs[i])
-        {
-            int flag;
-            while (a->blocs[i] == ' ')
-                i++;
-
-            if (a->blocs[i] == '\0')
-                break;
-
-            if (a->blocs[i] == '"' || a->blocs[i] == '\'')
-            {
-                char quote = a->blocs[i++];
-                s = i;
-                while (a->blocs[i] && a->blocs[i] != quote)
-                    i++;
-                if (quote == '"')
-                    flag = 0;
-                else
-                    flag = 1;
-                if (!a->blocs[i])
-                {
-                    if(flag==0)
-                        message(0);
-                    else
-                        message(1);
-                }
-
-                a->acces_args->args[k++] = create_arg(ft_substr(a->blocs, s, i - s), flag);
-                if (a->blocs[i] == quote)
-                    i++;
-            }
-            else if (a->blocs[i] == '<')
-            {
-                if (a->blocs[i + 1] == '<')
-                {
-                    a->acces_args->args[k++] = create_arg("<<", 3);
-                    i += 2;
-                }
-                else
-                {
-                    a->acces_args->args[k++] = create_arg("<", 4);
-                    i++;
-                }
-            }
-            else if (a->blocs[i] == '>')
-            {
-                if (a->blocs[i + 1] == '>')
-                {
-                    a->acces_args->args[k++] = create_arg(">>", 5);
-                    i += 2;
-                }
-                else
-                {
-                    a->acces_args->args[k++] = create_arg(">", 6);
-                    i++;
-                }
-            }
-            else
-            {
-                s = i;
-                while (a->blocs[i] && a->blocs[i] != ' ' && a->blocs[i] != '"' && a->blocs[i] != '\'')
-                    i++;
-                a->acces_args->args[k++] = create_arg(ft_substr(a->blocs, s, i - s), 2);
-            }
-        }
-        a->acces_args->args[k] = NULL;
-        a = a->next;
-    }
-}
-
-void check_cmd(t_general *pipe_blocs)
-{
-    int i = 0;
-    while (pipe_blocs)
-    {
-        i = 0;
-        while (pipe_blocs->acces_args->args[i])
-        {
-            if (ft_strncmp(pipe_blocs->acces_args->args[i]->str, "cd", 2) == 0)
-                cd_cmd(pipe_blocs->acces_args->args);
-            else if (ft_strncmp(pipe_blocs->acces_args->args[i]->str, "pwd", 3) == 0)
-                pwd_cmd(&pipe_blocs->acces_args->args[i]->str);
-            i++;
-        }
-        pipe_blocs = pipe_blocs->next;
-    }
-}
-
-int main()
-{
-    char *line;
-    t_general *pipe_blocs = create_general_node();
-
-    while (1)
-    {
-        line = readline("Our_shell% ");
-        if (!line)
-        {
-            printf("Error\n");
-            exit(1);
-        }
-        add_history(line);
-        pipe_parse(&pipe_blocs, line);
-        parse_input(pipe_blocs);
-        print_pipes(pipe_blocs);
-        dolar_control(pipe_blocs);
-        check_cmd(pipe_blocs);
-        // pipe_blocs = create_general_node();
-        free(line);
-    }
+	pipe_blocs = NULL;
+	(void)argc;
+	(void)argv;
+	pipe_blocs = create_general_node(0);
+	first_run = 1;
+	env = create_env_node();
+	if (first_run)
+	{
+		get_env(&env, envp);
+		first_run = 0;
+	}
+	get = malloc(sizeof(t_now));
+	get->envp = malloc(sizeof(t_now) * ft_lsttsize(env));
+	fill_env(&env, get);
+	signal_handler();
+	while (1)
+	{
+		line = readline("Our_shell% ");
+		if (!line)
+		{
+			write(1, "exit\n", 5);
+			exit(1);
+		}
+		add_history(line);
+		pipe_parse(&pipe_blocs, line);
+		parse_input(pipe_blocs);
+		//print_pipes(pipe_blocs);
+		if (pipe_blocs->next)
+			handle_pipe(pipe_blocs, get, &env);
+		else if (pipe_blocs->acces_args->args[0])
+		{
+			if ((!has_redireciton(pipe_blocs)
+					&& is_built_in(pipe_blocs->acces_args->args[0]->str)))
+			{
+				check_cmd_built_in(pipe_blocs, &env);
+			}
+			else
+				check_cmd_sys_call(pipe_blocs, &env, get);
+		}
+		pipe_blocs = create_general_node(pipe_blocs->dqm);
+		free(line);
+	}
 }

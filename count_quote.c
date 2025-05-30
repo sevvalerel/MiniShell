@@ -1,22 +1,39 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_strchr.c                                        :+:      :+:    :+:   */
+/*   count_quote.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/10/09 16:31:18 by bucolak           #+#    #+#             */
-/*   Updated: 2025/04/30 16:29:55 by bucolak          ###   ########.fr       */
+/*   Created: 2025/04/30 17:14:07 by bucolak           #+#    #+#             */
+/*   Updated: 2025/04/30 17:18:37 by bucolak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-char	*ft_strchr(const char *s, int c)
+#include "minishell.h"
+
+int count_dquote(char *str)
 {
-	while ((char)c != *s)
-	{
-		if (!*s)
-			return (0);
-		s++;
-	}
-	return ((char *)s);
+    int i = 0;
+    int c = 0;
+    while(str[i])
+    {
+        if(str[i] == '"')
+            c++;
+        i++;
+    }
+    return c;
+}
+
+int count_squote(char *str)
+{
+    int i = 0;
+    int c = 0;
+    while(str[i])
+    {
+        if(str[i] == '\'')
+            c++;
+        i++;
+    }
+    return c;
 }

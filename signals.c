@@ -1,22 +1,24 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_strchr.c                                        :+:      :+:    :+:   */
+/*   signals.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/10/09 16:31:18 by bucolak           #+#    #+#             */
-/*   Updated: 2025/04/30 16:29:55 by bucolak          ###   ########.fr       */
+/*   Created: 2025/05/17 16:16:35 by bucolak           #+#    #+#             */
+/*   Updated: 2025/05/20 14:59:49 by bucolak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-char	*ft_strchr(const char *s, int c)
+#include "minishell.h"
+
+void	handle_signal(int signo)
 {
-	while ((char)c != *s)
-	{
-		if (!*s)
-			return (0);
-		s++;
-	}
-	return ((char *)s);
+    if(signo == SIGINT)
+    {
+        write(1, "\n", 1); 
+        rl_on_new_line();
+        //rl_replace_line("", 0);
+	    rl_redisplay();
+    }
 }

@@ -1,4 +1,22 @@
-SRC = main.c execute.c cmd_built_in.c message.c
+SRC = main.c \
+	  execute.c \
+	  cmd_built_in.c \
+	  environment_first.c \
+	  environment_second.c \
+	  count_quote.c \
+	  message.c \
+	  etc.c \
+	  apply_malloc.c \
+	  redirection_first.c \
+	  redirection_second.c \
+	  echo_first.c \
+	  echo_second.c \
+	  exit.c \
+	  unset.c \
+	  pipe.c \
+	  signals.c \
+	  parser.c	\
+	  free.c
 
 CC = gcc 
 
@@ -8,25 +26,41 @@ MINISHELL = minishell
 
 OBJ = $(SRC:.c=.o)
 
-CFLAGS = -g
+CFLAGS = -Wall -Wextra -Werror -g
 
 LDFLAGS = -lreadline
 
-all: $(MINISHELL)
+%.o: %.c
+	@$(CC) $(CFLAGS) -c $< -o $@
 
+all: $(MINISHELL)
+	@echo "Compiled!"
+	
 $(MINISHELL): $(OBJ)
-	make -C ./libft
-	make bonus -C ./libft
-	$(CC) $(CFLAGS) $(OBJ) $(LIBFT) $(LDFLAGS) -o $(MINISHELL)
+	@make -C ./libft --silent
+	@make bonus -C ./libft --silent
+	@$(CC) $(CFLAGS) $(OBJ) $(LIBFT) $(LDFLAGS) -o $(MINISHELL)
 
 clean: 
-	make clean -C ./libft
-	rm -f $(OBJ)
+	@make clean -C ./libft --silent
+	@rm -f $(OBJ)
 
 fclean: clean
-	make fclean -C ./libft
-	rm -f $(MINISHELL)
+	@make fclean -C ./libft --silent
+	@rm -f $(MINISHELL)
 
 re: fclean all
+	@echo "Compiled!"
+
+leaks:
+	@echo "Running walgrind..."
+	@valgrind --leak-check=full			\
+			--show-leak-kinds=all 		\
+			--track-origins=yes			\
+			--track-fds=yes				\
+			--verbose 					\
+			--suppressions=valgrind.supp	\
+			./$(MINISHELL)
+
 
 .PHONY: all clean fclean re

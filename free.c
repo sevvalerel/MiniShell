@@ -1,22 +1,27 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_strchr.c                                        :+:      :+:    :+:   */
+/*   free.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/10/09 16:31:18 by bucolak           #+#    #+#             */
-/*   Updated: 2025/04/30 16:29:55 by bucolak          ###   ########.fr       */
+/*   Created: 2025/05/20 16:12:21 by bucolak           #+#    #+#             */
+/*   Updated: 2025/05/20 16:12:43 by bucolak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-char	*ft_strchr(const char *s, int c)
+#include "minishell.h"
+
+void free_split(char **str)
 {
-	while ((char)c != *s)
-	{
-		if (!*s)
-			return (0);
-		s++;
-	}
-	return ((char *)s);
+    int i;
+    if(!str)
+        return ;
+    i = 0;
+    while(str[i])
+    {
+        free(str[i]);
+        i++;
+    }
+    free(str);
 }

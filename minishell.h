@@ -3,74 +3,189 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
+/*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:05:46 by bucolak           #+#    #+#             */
-/*   Updated: 2025/05/01 16:13:26 by seerel           ###   ########.fr       */
+/*   Updated: 2025/05/24 14:20:30 by bucolak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef MINISHELL_H
-#define MINISHELL_H
+# define MINISHELL_H
 
-#include "libft/libft.h"
+# include "libft/libft.h"
 
 // temel giriş/çıkış
-#include <stdio.h>       // printf, perror
-#include <stdlib.h>      // malloc, free, exit, getenv
-#include <unistd.h>      // write, access, read, close, fork, getcwd, chdir, execve, isatty, ttyname, ttyslot
+# include <stdio.h>  // printf, perror
+# include <stdlib.h> // malloc, free, exit, getenv
+# include <unistd.h> // write, access, read, close, fork, getcwd, chdir, execve,
+					//isatty, ttyname, ttyslot
 
 // dosya işlemleri
-#include <fcntl.h>       // open, O_RDONLY, O_WRONLY, vs.
-#include <sys/stat.h>    // stat, lstat, fstat
-#include <dirent.h>      // opendir, readdir, closedir
+# include <dirent.h>   // opendir, readdir, closedir
+# include <fcntl.h>    // open, O_RDONLY, O_WRONLY, vs.
+# include <sys/stat.h> // stat, lstat, fstat
 
 // sinyal işlemleri
-#include <signal.h>      // signal, sigaction, sigemptyset, sigaddset, kill
+# include <signal.h> // signal, sigaction, sigemptyset, sigaddset, kill
 
 // işlem kontrolü
-#include <sys/wait.h>    // wait, waitpid, wait3, wait4
+# include <sys/wait.h> // wait, waitpid, wait3, wait4
 
 // hata işlemleri
-#include <string.h>      // strerror
+# include <string.h> // strerror
 
 // terminal özellikleri
-#include <termios.h>     // tcsetattr, tcgetattr
-#include <termcap.h>     // tgetent, tgetflag, tgetnum, tgetstr, tgoto, tputs
-#include <sys/ioctl.h>   // ioctl
+# include <sys/ioctl.h> // ioctl
+# include <termcap.h>   // tgetent, tgetflag, tgetnum, tgetstr, tgoto, tputs
+# include <termios.h>   // tcsetattr, tcgetattr
 
 // readline
-#include <readline/readline.h>
-#include <readline/history.h>
+# include <readline/history.h>
+# include <readline/readline.h>
+
+typedef struct s_env
+{
+	char				*data;
+	char				*key;
+	struct s_env		*next;
+}						t_env;
 
 typedef struct s_arg
 {
-    char *str;
-    int flag;
-}   t_arg;
+	char				*str;
+	int					flag;
+}						t_arg;
 
 typedef struct s_pipeafter
 {
-    t_arg **args;
-}   t_pipeafter;
+	t_arg				**args;
+}						t_pipeafter;
 
 typedef struct s_general
 {
-    char *blocs;
-    t_pipeafter *acces_args;
-    struct s_general *next;
-} t_general;
+	int					dqm;
+	char				*blocs;
+	t_pipeafter			*acces_args;
+	struct s_general	*next;
+}						t_general;
 
-void add_flag(t_general *a);
-void echo_cont(t_general *a);
-void dolar_control(t_general *a);
-void parse_input( t_general *a);
-void check_cmd(t_general *pipe_blocs);
+typedef struct s_now
+{
+	char				**envp;
+}						t_now;
 
+typedef struct s_heredoc
+{
+	char				*content;
+	struct s_heredoc	*next;
+}						t_heredoc;
+
+typedef struct s_pipe
+{
+	int					**fd;
+	pid_t				*pid;
+	int					count;
+	t_general			*tmp;
+}						t_pipe;
+
+void					free_split(char **str);
+// apply_malloc.c
+//t_arg *create_arg(const char *str, int flag);
+t_arg					*create_arg(const char *str, int flag, int type);
+t_pipeafter				*create_pipeafter(void);
+t_general				*create_general_node(int dqm);
+t_env					*create_env_node(void);
+
+// main.c
+void					pipe_parse(t_general **pipe_block, char *line);
+void					parse_input(t_general *a);
+
+// execute.c
+void					check_cmd_sys_call(t_general *pipe_blocs, t_env **env,
+							t_now *get);
+int						is_built_in(char *str);
+void					fill_env(t_env **env, t_now *get);
+void					handle_pipe(t_general *list, t_now *get, t_env **env);
+void					handle_redirections(t_general *pipe_blocs);
+void					execute_command(t_general *pipe_blocs, t_now *get);
 // cmd_built_in.c
-void cd_cmd(t_arg **args);
-void pwd_cmd(char **ar);
+void					check_cmd_built_in(t_general *pipe_blocs, t_env **node);
+void	built_in_helper_func(t_general *pipe_blocs,
+							t_env **node,
+							int *i);
+void					cd_cmd(t_arg **args, t_env *env);
+void	pwd_cmd(char **ar, t_general *list);
 
+// environment_first.c
+void					get_env_helper_func(int *i, int *j, t_env *tmp,
+							char **envp);
+void					get_env(t_env **node, char **envp);
+void					print_env(t_general *list, t_env **node, int i);
+void					ft_envadd_back(t_env **lst, char *key, char *data,
+							t_general *list);
+void					create_env(t_general *list, t_env **env);
 
-int message(int i);
+// environment_second.c
+char					*get_key(char *str);
+char					*get_data(char *str);
+void	print_export_env(t_env **env, t_general *list);
+void					export_cmd_helper_func(t_env **env, t_env **new_env,
+							t_env *swap, int *j);
+t_env					**export_cmd(t_env **env);
+
+//count_quote.c
+int						count_squote(char *str);
+int						count_dquote(char *str);
+
+// message.c
+int						message(int i);
+void					error_msg(int i, char *str, int type, t_general *list);
+
+// etc.c
+int						ft_lsttsize(t_env *lst);
+int						ft_strcmp(const char *s1, const char *s2);
+t_env					*ft_lsttlast(t_env *lst);
+int						is_numeric(char *str);
+int						is_repeated(t_env **node, char *ky, char *dt);
+
+// redirection_first.c
+int						is_redireciton(char *str);
+void					renew_block2(t_general *list);
+void					renew_else_block(t_arg ***new, t_general *tmp, int *i,
+							int *j);
+void					renew_block2(t_general *list);
+void					handle_output(t_general *list);
+void					handle_input(t_general *list);
+
+// redirection_second.c
+void					heredoc_actions(t_general *list, t_heredoc *tmp,
+							t_heredoc *heredoc);
+void					handle_heredoc(t_general *list);
+
+// echo_first.c
+void					echo_flag_4_second(char *str, char *env, t_general *tmp,
+							int *j);
+void					echo_flag_4(char *str, char *env, t_general *tmp);
+void					echo_cmd(t_general *tmp, char *str, char *env, int i);
+void					initalized_echo(t_general *list);
+
+// echo_second.c
+void					echo_flag_0_and_2_second(char *str, char *env,
+							t_general *tmp, int *j);
+void					echo_flag_0_and_2(char *env, char *str, t_general *tmp,
+							int i);
+void					echo_flag_1(char *env, t_general *tmp, int i);
+
+// exit.c
+void					exit_cont(t_general *list, int a);
+void					exit_cmd(t_general *list);
+
+// unset.c
+void					unset_cmd_helper_func(t_env *node, t_env *pre_node,
+							char *s);
+void					unset_cmd(t_general *list, t_env **env);
+
+void					handle_signal(int signo);
+
 #endif

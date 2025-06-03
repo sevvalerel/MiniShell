@@ -6,7 +6,7 @@
 /*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:22:33 by bucolak           #+#    #+#             */
-/*   Updated: 2025/05/24 14:20:35 by bucolak          ###   ########.fr       */
+/*   Updated: 2025/06/03 19:37:16 by bucolak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -240,6 +240,16 @@ void	signal_handler(void)
 	signal(SIGQUIT, SIG_IGN);
 }
 
+void restore_stdin(t_general *list)
+{
+    if (list->heredoc_fd != -1)
+    {
+        dup2(list->heredoc_fd, STDIN_FILENO);
+        close(list->heredoc_fd);
+        list->heredoc_fd = -1;
+    }
+}
+
 int	main(int argc, char *argv[], char **envp)
 {
 	char		*line;
@@ -247,11 +257,11 @@ int	main(int argc, char *argv[], char **envp)
 	t_env		*env;
 	t_now		*get;
 	static int	first_run;
-
 	pipe_blocs = NULL;
 	(void)argc;
 	(void)argv;
 	pipe_blocs = create_general_node(0);
+	pipe_blocs->heredoc_fd=-1;
 	first_run = 1;
 	env = create_env_node();
 	if (first_run)
@@ -262,22 +272,29 @@ int	main(int argc, char *argv[], char **envp)
 	get = malloc(sizeof(t_now));
 	get->envp = malloc(sizeof(t_now) * ft_lsttsize(env));
 	fill_env(&env, get);
-	signal_handler();
 	while (1)
 	{
 		line = readline("Our_shell% ");
+		//printf(%s)
 		if (!line)
 		{
-			write(1, "exit\n", 5);
+			perror("readline döndü NULL");
 			exit(1);
 		}
+		if (line[0] == '\0')
+        {
+            free(line);
+            continue;
+        }
 		add_history(line);
 		pipe_parse(&pipe_blocs, line);
+		signal_handler();
 		parse_input(pipe_blocs);
+		handle_heredoc(pipe_blocs);
 		//print_pipes(pipe_blocs);
 		if (pipe_blocs->next)
 			handle_pipe(pipe_blocs, get, &env);
-		else if (pipe_blocs->acces_args->args[0])
+		else if (pipe_blocs->acces_args && pipe_blocs->acces_args->args[0])
 		{
 			if ((!has_redireciton(pipe_blocs)
 					&& is_built_in(pipe_blocs->acces_args->args[0]->str)))
@@ -285,7 +302,9 @@ int	main(int argc, char *argv[], char **envp)
 				check_cmd_built_in(pipe_blocs, &env);
 			}
 			else
+			{
 				check_cmd_sys_call(pipe_blocs, &env, get);
+			}
 		}
 		pipe_blocs = create_general_node(pipe_blocs->dqm);
 		free(line);

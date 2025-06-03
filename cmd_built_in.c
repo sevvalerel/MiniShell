@@ -6,7 +6,7 @@
 /*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 22:48:09 by buket             #+#    #+#             */
-/*   Updated: 2025/05/31 00:40:45 by bucolak          ###   ########.fr       */
+/*   Updated: 2025/06/03 19:14:31 by bucolak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,8 @@ void	built_in_helper_func(t_general *pipe_blocs, t_env **node, int *i)
 				&& pipe_blocs->acces_args->args[*i + 1]->str)
 			&& !pipe_blocs->acces_args->args[*i + 2])
 			create_env(pipe_blocs, node);
+		else if(pipe_blocs->acces_args->args[*i + 2])
+			return ;
 		else
 			print_export_env(node, pipe_blocs);
 	}
@@ -39,8 +41,8 @@ void	built_in_helper_func(t_general *pipe_blocs, t_env **node, int *i)
 	else if (ft_strcmp(pipe_blocs->acces_args->args[0]->str,
 						"$?") == 0)
 	{
-		ft_putstr_fd(ft_itoa(pipe_blocs->dqm), 1);
-		ft_putstr_fd(": command not found\n", 1);
+		ft_putstr_fd(ft_itoa(pipe_blocs->dqm), 2);
+		ft_putstr_fd(": command not found\n", 2);
 		//pipe_blocs->dqm = 127;
 	}
 }

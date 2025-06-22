@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
+/*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:05:46 by bucolak           #+#    #+#             */
-/*   Updated: 2025/06/18 18:41:57 by seerel           ###   ########.fr       */
+/*   Updated: 2025/06/19 20:19:17 by buket            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,7 +116,7 @@ void					check_cmd_built_in(t_general *pipe_blocs, t_env **node);
 void	built_in_helper_func(t_general *pipe_blocs,
 							t_env **node,
 							int *i);
-void					cd_cmd(t_arg **args, t_env *env);
+void	cd_cmd(t_arg **args, t_env *env, t_general *pipe_blocks);
 void					pwd_cmd(char **ar, t_general *list);
 
 // environment_first.c

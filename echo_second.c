@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   echo_second.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
+/*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:24:36 by bucolak           #+#    #+#             */
-/*   Updated: 2025/06/19 13:25:57 by seerel           ###   ########.fr       */
+/*   Updated: 2025/06/19 19:15:20 by buket            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,8 @@ void	echo_flag_0_and_2_second(char *str, char *env, t_general *tmp, int *j)
 	}
 	else
 	{
-		ft_putchar_fd(str[*j], 1);
+		if(str[*j]!='"')
+			ft_putchar_fd(str[*j], 1);
 		(*j)++;
 	}
 }

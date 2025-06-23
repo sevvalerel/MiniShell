@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   execute.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
+/*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 22:47:09 by buket             #+#    #+#             */
-/*   Updated: 2025/06/19 13:49:05 by seerel           ###   ########.fr       */
+/*   Updated: 2025/06/23 21:43:35 by buket            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,10 +29,13 @@ void	handle_append(t_general *list)
 							O_CREAT | O_WRONLY | O_APPEND,
 							0644);
 				if (fd < 0)
+				{
 					perror("open");
+				}
+					
 				dup2(fd, 1);
 				close(fd);
-				renew_block2(list);
+				//renew_block2(list);
 				break ;
 			}
 		}
@@ -62,7 +65,67 @@ void	execute_command(t_general *pipe_blocs, t_now *get)
 	char	*end;
 	int		command_found;
 	char	**argv;
-
+	char *cmd;
+	char *env;
+	struct stat sb;
+	
+	cmd = pipe_blocs->acces_args->args[0]->str;
+	if (ft_strchr(cmd, '/')) 
+	{
+		if(stat(cmd, &sb) == 0 && S_ISDIR(sb.st_mode))
+		{
+			ft_putstr_fd("bash: ", 2);
+            ft_putstr_fd(cmd, 2);
+            ft_putstr_fd(": Is a directory\n", 2);
+			pipe_blocs->dqm = 126;
+            exit(pipe_blocs->dqm);
+		}
+        else if (access(cmd, F_OK) != 0) 
+		{
+            error_msg(2, cmd, 0, pipe_blocs);
+			pipe_blocs->dqm = 127;
+            exit(pipe_blocs->dqm);
+        } 
+		else if (access(cmd, X_OK) != 0) 
+		{
+            ft_putstr_fd("bash: ", 2);
+            ft_putstr_fd(cmd, 2);
+            ft_putstr_fd(": Permission denied\n", 2);
+            pipe_blocs->dqm = 126;
+            exit(pipe_blocs->dqm);
+        }
+	}
+	if(cmd[0] == '$')
+	{
+		env = getenv(cmd+1);
+		if(ft_strcmp(cmd, "$") == 0)
+		{
+			ft_putstr_fd("$: command not found\n", 2); // "command not found" mesajı
+        	pipe_blocs->dqm = 127;
+        	exit(pipe_blocs->dqm);
+		}
+		else if(env)
+			cmd = env;
+		else
+		{
+			if(pipe_blocs->acces_args->args[1])
+			{
+				cmd = pipe_blocs->acces_args->args[1]->str;
+				i = 1;
+				while(pipe_blocs->acces_args->args[i])
+				{
+					pipe_blocs->acces_args->args[i-1] = pipe_blocs->acces_args->args[i];
+					i++;
+				}	
+				pipe_blocs->acces_args->args[i-1] = NULL;
+			}
+			else
+        	{
+        	    pipe_blocs->dqm = 0;
+				exit(pipe_blocs->dqm);
+			}
+		}
+	}
 	i = 0;
 	command_found = 0;
 	args = getenv("PATH");
@@ -73,9 +136,7 @@ void	execute_command(t_general *pipe_blocs, t_now *get)
 		end = ft_strjoin(str, pipe_blocs->acces_args->args[0]->str);
 		if (access(end, X_OK) == 0)
 		{
-		printf("aa\n");
-
-			if(pipe_blocs->heredoc_fd!=-1)
+			if(pipe_blocs->heredoc_fd==-1)
 			{
 				dup2(pipe_blocs->heredoc_fd, 0);
 				close(pipe_blocs->heredoc_fd);
@@ -97,10 +158,25 @@ void	execute_command(t_general *pipe_blocs, t_now *get)
 		free(end);
 		i++;
 	}
-	if (!command_found)
+	if (!command_found && pipe_blocs->acces_args->args[0]->str[0] != '$')
 	{
 		error_msg(2, pipe_blocs->acces_args->args[0]->str, 1, pipe_blocs);
 		exit(pipe_blocs->dqm);
+	}
+	else if(pipe_blocs->acces_args->args[0]->str[0] == '$')
+	{
+		pipe_blocs->acces_args->args[0]->str++;
+		if(getenv(pipe_blocs->acces_args->args[0]->str))
+		{
+			ft_putstr_fd("bash: ", 2);
+			ft_putstr_fd(getenv(pipe_blocs->acces_args->args[0]->str), 2);
+			ft_putstr_fd(": Is a directory\n", 2);
+		}
+		if(getenv(pipe_blocs->acces_args->args[0]->str))
+			pipe_blocs->dqm = 126;
+		else
+			pipe_blocs->dqm = 0;
+		
 	}
 }
 
@@ -199,12 +275,12 @@ void	handle_redirections(t_general *pipe_blocs)
 	handle_output(pipe_blocs);
 	handle_input(pipe_blocs);
 	handle_append(pipe_blocs);
+	renew_block2(pipe_blocs);
 	//handle_heredoc(pipe_blocs);
 }
 
 void	check_cmd_sys_call(t_general *pipe_blocs, t_env **env, t_now *get)
 {
-	//printf("burxda\n");
 	int		status;
 	pid_t	pid;
 	status = 0;
@@ -224,23 +300,12 @@ void	check_cmd_sys_call(t_general *pipe_blocs, t_env **env, t_now *get)
 		}
 		else
 		{
-			// if (pipe_blocs->heredoc_fd != -1)
-			// {
-			// 	printf("hey\n");
-			// 	dup2(pipe_blocs->heredoc_fd, 0);
-			// 	close(pipe_blocs->heredoc_fd);
-			// }
 			execute_command(pipe_blocs, get);
 			exit(pipe_blocs->dqm);
 		}
 	}
 	else
 	{
-		// if (pipe_blocs->heredoc_fd != -1)
-		// {
-		// 	close(pipe_blocs->heredoc_fd);
-		// 	pipe_blocs->heredoc_fd = -1;
-		// }
 		waitpid(pid, &status, 0);
 		if (WIFEXITED(status))
 			pipe_blocs->dqm = WEXITSTATUS(status);

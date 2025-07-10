@@ -6,13 +6,13 @@
 /*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 22:48:09 by buket             #+#    #+#             */
-/*   Updated: 2025/06/23 15:33:50 by buket            ###   ########.fr       */
+/*   Updated: 2025/07/09 01:08:24 by buket            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-void	built_in_helper_func(t_general *pipe_blocs, t_env **node, int *i)
+void	built_in_helper_func(t_general *pipe_blocs, t_env **node, int *i, t_pipe *pipe, t_now *get)
 {
 	if (ft_strcmp(pipe_blocs->acces_args->args[*i]->str,
 					"pwd") == 0)
@@ -52,7 +52,7 @@ void	built_in_helper_func(t_general *pipe_blocs, t_env **node, int *i)
 		print_env(pipe_blocs, node, *i);
 	else if (ft_strcmp(pipe_blocs->acces_args->args[*i]->str,
 						"exit") == 0)
-		exit_cmd(pipe_blocs);
+		exit_cmd(pipe_blocs, *node, pipe, get);
 	else if (ft_strcmp(pipe_blocs->acces_args->args[0]->str,
 						"$?") == 0)
 	{
@@ -63,28 +63,23 @@ void	built_in_helper_func(t_general *pipe_blocs, t_env **node, int *i)
 	}
 }
 
-void	check_cmd_built_in(t_general *pipe_blocs, t_env **node)
+void	check_cmd_built_in(t_general *pipe_blocs, t_env **node, t_pipe *pipe, t_now *get)
 {
 	int	i;
 
 	i = 0;
-	while (pipe_blocs)
+	while (pipe_blocs->acces_args->args[i])
 	{
-		i = 0;
-		while (pipe_blocs->acces_args->args[i])
+		if (ft_strcmp(pipe_blocs->acces_args->args[i]->str, "cd") == 0)
 		{
-			if (ft_strcmp(pipe_blocs->acces_args->args[i]->str, "cd") == 0)
-			{
-				cd_cmd(pipe_blocs->acces_args->args, *node, pipe_blocs);
-				break ;
-			}
-			built_in_helper_func(pipe_blocs, node, &i);
-			if (ft_strcmp(pipe_blocs->acces_args->args[i]->str,
-							"echo") == 0)
-				initalized_echo(pipe_blocs);
-			i++;
+			cd_cmd(pipe_blocs->acces_args->args, *node, pipe_blocs);
+			break ;
 		}
-		pipe_blocs = pipe_blocs->next;
+		built_in_helper_func(pipe_blocs, node, &i, pipe, get);
+		if (ft_strcmp(pipe_blocs->acces_args->args[i]->str,
+						"echo") == 0)
+			initalized_echo(pipe_blocs);
+		i++;
 	}
 }
 
@@ -144,9 +139,11 @@ void	pwd_cmd(char **ar, t_general *list)
 		{
 			printf("Error\n");
 			free(line);
-			//free_split(ar);
-			exit(1);
+			list->dqm = 1;
+			return ;
 		}
 		printf("%s\n", line);
+		free(line);
+		list->dqm = 0;
 	}
 }

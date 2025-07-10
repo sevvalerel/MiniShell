@@ -6,7 +6,7 @@
 /*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/09 12:51:00 by bucolak           #+#    #+#             */
-/*   Updated: 2025/06/23 21:52:16 by buket            ###   ########.fr       */
+/*   Updated: 2025/07/02 17:51:54 by buket            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,8 @@ void	renew_block2(t_general *list)
 	tmp = list;
 	while (tmp->acces_args->args[i])
 		i++;
-	new = malloc(sizeof(t_arg *) * (i + 1));
+	//new = malloc(sizeof(t_arg *) * (i + 1));
+	new = ft_calloc(sizeof(t_arg *), (i + 1));
 	i = 0;
 	while (tmp->acces_args->args[i])
 	{
@@ -65,60 +66,52 @@ void	renew_block2(t_general *list)
 	}
 	new[j] = NULL;
 	tmp->acces_args->args = new;
+	//dfree(new);
 }
 
-void	handle_output(t_general *list)
+void	handle_output(t_general *list, int i)
 {
-	int	i;
 	int	fd;
 	char *last_input;
 	int last_fd;
 	last_fd = -1;
-	i = 0;
-	while (list->acces_args->args[i])
+	if (ft_strcmp(list->acces_args->args[i]->str, ">") == 0)
 	{
-		if (ft_strcmp(list->acces_args->args[i]->str, ">") == 0)
+		if (list->acces_args->args[i + 1])
 		{
-			if (list->acces_args->args[i + 1])
+			i++;
+			last_input = list->acces_args->args[i]->str;
+			fd = open(last_input, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+			if(access(last_input, F_OK) != 0)
 			{
-				i++;
-				last_input = list->acces_args->args[i]->str;
-				fd = open(last_input,
-					O_CREAT | O_WRONLY | O_TRUNC, 0644);
-				if (ft_strchr(last_input, '/'))
-				{
-					if(access(last_input, F_OK) != 0)
-					{
-						error_msg(2, last_input, 0, list);
-						exit(list->dqm);
-					}
-					if (access(last_input, W_OK) != 0)
-					{
-						ft_putstr_fd("bash: ", 2);
-						ft_putstr_fd(last_input, 2);
-						ft_putstr_fd(": Permission denied\n", 2);
-						list->dqm = 1;
-						exit(list->dqm);
-					}
-				}
-				if (fd < 0)
-				{
-					//printf("burda2\n");
-					error_msg(i, list->acces_args->args[i]->str, 0, list);
-					list->dqm = 1;
-					exit(list->dqm);
-				}
-				if(last_fd !=-1)
-					close(last_fd);
-				last_fd = fd;
+				error_msg(2, last_input, 0, list);
+				exit(list->dqm);
 			}
-			else
+			if (access(last_input, W_OK) != 0)
 			{
-				error_msg(2, NULL, 3, list);
-				exit(list->dqm) ;
+				// printf("burda\n");
+				ft_putstr_fd("bash: ", 2);
+				ft_putstr_fd(last_input, 2);
+				ft_putstr_fd(": Permission denied\n", 2);
+				list->dqm = 1;
+				exit(list->dqm);
 			}
+			if (fd < 0)
+			{
+				//printf("burda2\n");
+				error_msg(i, list->acces_args->args[i]->str, 0, list);
+				list->dqm = 1;
+				exit(list->dqm);
+			}
+			if(last_fd !=-1)
+				close(last_fd);
+			last_fd = fd;
 		}
-		i++;
+		else
+		{
+			error_msg(2, NULL, 3, list);
+			exit(list->dqm) ;
+		}
 	}
 	if(last_fd!=-1)
 	{
@@ -128,28 +121,40 @@ void	handle_output(t_general *list)
 	//renew_block2(list);
 }
 
-void	handle_input(t_general *list)
+void	handle_input(t_general *list, int i)
 {
-	int	i;
 	int	fd;
 	char *last_input;
 	int last_fd;
 	last_fd = -1;
-	i = 0;
-	while (list->acces_args->args[i])
-	{
+	// while (list->acces_args->args[i])
+	// {
 		if (ft_strcmp(list->acces_args->args[i]->str, "<") == 0)
 		{
 			if (list->acces_args->args[i + 1])
 			{
 				i++;
 				last_input = list->acces_args->args[i]->str;
+				
 				fd = open(last_input, O_RDONLY, 0644);
+				if(access(last_input, F_OK) != 0)
+				{
+					error_msg(2, last_input, 0, list);
+					exit(list->dqm);
+				}
+				if (access(last_input, R_OK) != 0)
+				{
+					//printf("burda\n");
+					ft_putstr_fd("bash: ", 2);
+					ft_putstr_fd(last_input, 2);
+					ft_putstr_fd(": Permission denied\n", 2);
+					list->dqm = 1;
+					exit(list->dqm);
+				}
+				
 				if (fd < 0)
 				{
-					ft_putstr_fd("bash: ",2);
-					ft_putstr_fd(last_input, 2);
-					ft_putstr_fd(": No such file or directory\n", 2);
+					error_msg(i, list->acces_args->args[i]->str, 0, list);
 					list->dqm = 1;
 					exit(list->dqm);
 				}
@@ -163,8 +168,8 @@ void	handle_input(t_general *list)
                 exit(list->dqm);
 			}
 		}
-		i++;
-	}
+	// 	i++;
+	// }
 	if(last_fd!=-1)
 	{
 		dup2(last_fd, 0);

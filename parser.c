@@ -6,7 +6,7 @@
 /*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/20 17:12:55 by bucolak           #+#    #+#             */
-/*   Updated: 2025/06/22 00:24:53 by buket            ###   ########.fr       */
+/*   Updated: 2025/07/03 00:01:18 by buket            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,7 +99,7 @@ void	parse_input(t_general *a)
 				{
 					while (a->blocs[i])
 						i++;
-					if(has_single(&a->blocs[i]) == 0)
+					if(has_single(&a->blocs[j]) == 0)
 					{
 						a->acces_args->args[k] = create_arg(ft_substr(a->blocs, j, i
 								- j), 0, 0);
@@ -144,8 +144,10 @@ void	parse_input(t_general *a)
 					&& a->blocs[i] != '>')
 					i++;
 				if ((!a->blocs[i] || a->blocs[i] == ' ' || a->blocs[i] == '<' || a->blocs[i] == '>') && a->blocs[i-1] != '"' && a->blocs[i-1] != '\'')
-					a->acces_args->args[k++] = create_arg(ft_substr(a->blocs, j,
-								i - j), 2, 0);
+				{
+					a->acces_args->args[k++] = create_arg(ft_substr(a->blocs, j,i - j), 2, 0);
+					
+				}
 				else if(!a->blocs[i] && (a->blocs[i-1] == '"' || a->blocs[i-1] == '\''))
 				{
 					a->acces_args->args[k++] = create_arg(ft_substr(a->blocs, j,

@@ -6,41 +6,65 @@
 /*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 22:47:09 by buket             #+#    #+#             */
-/*   Updated: 2025/06/23 21:43:35 by buket            ###   ########.fr       */
+/*   Updated: 2025/07/02 23:24:53 by buket            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-void	handle_append(t_general *list)
+void	handle_append(t_general *list, int i)
 {
-	int	i;
 	int	fd;
-
-	i = 0;
-	while (list->acces_args->args[i])
-	{
+	char *last_input;
+	int last_fd;
+	last_fd = -1;
 		if (ft_strcmp(list->acces_args->args[i]->str, ">>") == 0)
 		{
 			if (list->acces_args->args[i + 1])
 			{
 				i++;
-				fd = open(list->acces_args->args[i]->str,
-							O_CREAT | O_WRONLY | O_APPEND,
+				last_input = list->acces_args->args[i]->str;
+				fd = open(last_input, O_CREAT | O_WRONLY | O_APPEND,
 							0644);
+				if(access(last_input, F_OK) != 0)
+				{
+					error_msg(2, last_input, 0, list);
+					free_pipe_blocks(list);
+					exit(list->dqm);
+				}
+				if (access(last_input, W_OK) != 0)
+				{
+					// printf("burda\n");
+					ft_putstr_fd("bash: ", 2);
+					ft_putstr_fd(last_input, 2);
+					ft_putstr_fd(": Permission denied\n", 2);
+					free_pipe_blocks(list);
+					list->dqm = 1;
+					exit(list->dqm);
+				}
 				if (fd < 0)
 				{
-					perror("open");
+					error_msg(i, list->acces_args->args[i]->str, 0, list);
+					list->dqm = 1;
+					free_pipe_blocks(list);
+					exit(list->dqm);
 				}
-					
-				dup2(fd, 1);
-				close(fd);
-				//renew_block2(list);
-				break ;
+				if(last_fd !=-1)
+					close(last_fd);
+				last_fd = fd;
+			}
+			else
+			{
+				error_msg(2, NULL, 3, list);
+				free_pipe_blocks(list);
+				exit(list->dqm) ;
 			}
 		}
-		i++;
-	}
+		if(last_fd!=-1)
+		{
+			dup2(last_fd, 1);
+			close(last_fd);
+		}
 }
 char	**make_argv(t_pipeafter *acces_args)
 {
@@ -136,8 +160,9 @@ void	execute_command(t_general *pipe_blocs, t_now *get)
 		end = ft_strjoin(str, pipe_blocs->acces_args->args[0]->str);
 		if (access(end, X_OK) == 0)
 		{
-			if(pipe_blocs->heredoc_fd==-1)
+			if(pipe_blocs->heredoc_fd!=-1)
 			{
+				//printf("%d\n",pipe_blocs->heredoc_fd);
 				dup2(pipe_blocs->heredoc_fd, 0);
 				close(pipe_blocs->heredoc_fd);
 			}
@@ -272,9 +297,18 @@ void	check_redirection_args(t_general *pipe_blocs)
 
 void	handle_redirections(t_general *pipe_blocs)
 {
-	handle_output(pipe_blocs);
-	handle_input(pipe_blocs);
-	handle_append(pipe_blocs);
+	int i = 0;
+
+	while(pipe_blocs->acces_args->args[i])
+	{
+		if(ft_strcmp(pipe_blocs->acces_args->args[i]->str, "<") == 0)
+			handle_input(pipe_blocs, i);
+		else if(ft_strcmp(pipe_blocs->acces_args->args[i]->str, ">") == 0)
+			handle_output(pipe_blocs, i);
+		else if(ft_strcmp(pipe_blocs->acces_args->args[i]->str, ">>") == 0)
+			handle_append(pipe_blocs, i);
+		i++;
+	}
 	renew_block2(pipe_blocs);
 	//handle_heredoc(pipe_blocs);
 }
@@ -287,7 +321,7 @@ void	check_cmd_sys_call(t_general *pipe_blocs, t_env **env, t_now *get)
 	pid = fork();
 	if (pipe_blocs->next)
 	{
-		handle_pipe(pipe_blocs, get, env);
+		handle_pipe(pipe_blocs, get, env, NULL);
 		return ;
 	}
 	if (pid == 0)
@@ -295,7 +329,7 @@ void	check_cmd_sys_call(t_general *pipe_blocs, t_env **env, t_now *get)
 		handle_redirections(pipe_blocs);
 		if (is_built_in(pipe_blocs->acces_args->args[0]->str) == 1)
 		{
-			check_cmd_built_in(pipe_blocs, env);
+			check_cmd_built_in(pipe_blocs, env, NULL, get);
 			exit(pipe_blocs->dqm);
 		}
 		else
@@ -309,8 +343,6 @@ void	check_cmd_sys_call(t_general *pipe_blocs, t_env **env, t_now *get)
 		waitpid(pid, &status, 0);
 		if (WIFEXITED(status))
 			pipe_blocs->dqm = WEXITSTATUS(status);
-		free(get->envp);
-		free(get);
 	}
 }
 

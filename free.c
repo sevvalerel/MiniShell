@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   free.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
+/*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/20 16:12:21 by bucolak           #+#    #+#             */
-/*   Updated: 2025/05/20 16:12:43 by bucolak          ###   ########.fr       */
+/*   Updated: 2025/07/09 01:14:25 by buket            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,4 +24,69 @@ void free_split(char **str)
         i++;
     }
     free(str);
+}
+
+void free_env(t_env *env)
+{
+    t_env *tmp;
+    tmp = env;
+    while(tmp)
+    {
+        tmp = env->next;
+        if (env->key)
+            free(env->key);
+        if (env->data)
+            free(env->data);
+        free(env);
+        env = tmp;
+    }
+}
+
+void free_pipe_blocks(t_general *blocks)
+{
+    t_general *tmp;
+    int i;
+    tmp = blocks;
+    while(tmp)
+    {
+        i = 0;
+        while(tmp->acces_args->args[i])
+        {
+            if(tmp->acces_args->args[i]->str)
+                free(tmp->acces_args->args[i]->str);
+            free(tmp->acces_args->args[i]);
+            i++;
+        }
+        free(tmp->acces_args->args);
+        free(tmp->acces_args);
+        tmp = tmp->next;
+    }
+}
+
+void free_pipe(t_pipe *pipe)
+{
+    int i = 0;
+    while(pipe->fd[i])
+    {
+        free(pipe->fd[i]);
+        i++;
+    }   
+    free(pipe->fd);
+    free(pipe->pid);
+    free(pipe->tmp);
+    free(pipe);
+}
+
+void free_envp(t_now *get)
+{
+    int i;
+    i = 0;
+    while (get->envp[i])
+    {
+        free(get->envp[i]);
+        i++;
+    }
+    free(get->envp);
+    free(get);
+    get = NULL;
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:05:46 by bucolak           #+#    #+#             */
-/*   Updated: 2025/06/23 16:13:10 by buket            ###   ########.fr       */
+/*   Updated: 2025/07/09 21:46:14 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,12 +77,6 @@ typedef struct s_now
 	char				**envp;
 }						t_now;
 
-// typedef struct s_heredoc
-// {
-// 	char				*content;
-// 	struct s_heredoc	*next;
-// }						t_heredoc;
-
 typedef struct s_pipe
 {
 	int					**fd;
@@ -94,7 +88,7 @@ typedef struct s_pipe
 void					free_split(char **str);
 // apply_malloc.c
 //t_arg *create_arg(const char *str, int flag);
-t_arg					*create_arg(const char *str, int flag, int type);
+t_arg					*create_arg(char *str, int flag, int type);
 t_pipeafter				*create_pipeafter(void);
 t_general				*create_general_node(int dqm);
 t_env					*create_env_node(void);
@@ -102,20 +96,18 @@ t_env					*create_env_node(void);
 // main.c
 void					pipe_parse(t_general **pipe_block, char *line);
 void					parse_input(t_general *a);
+int has_heredoc(t_general *list);
 
 // execute.c
 void					check_cmd_sys_call(t_general *pipe_blocs, t_env **env,
 							t_now *get);
 int						is_built_in(char *str);
 void					fill_env(t_env **env, t_now *get);
-void					handle_pipe(t_general *list, t_now *get, t_env **env);
+void	handle_pipe(t_general *list, t_now *get, t_env **env, t_pipe *pipe);
 void					handle_redirections(t_general *pipe_blocs);
 void					execute_command(t_general *pipe_blocs, t_now *get);
 // cmd_built_in.c
-void					check_cmd_built_in(t_general *pipe_blocs, t_env **node);
-void	built_in_helper_func(t_general *pipe_blocs,
-							t_env **node,
-							int *i);
+void	check_cmd_built_in(t_general *pipe_blocs, t_env **node, t_pipe *pipe, t_now *get);
 void	cd_cmd(t_arg **args, t_env *env, t_general *pipe_blocks);
 void					pwd_cmd(char **ar, t_general *list);
 
@@ -157,8 +149,9 @@ void					renew_block2(t_general *list);
 void					renew_else_block(t_arg ***new, t_general *tmp, int *i,
 							int *j);
 void					renew_block2(t_general *list);
-void					handle_output(t_general *list);
-void					handle_input(t_general *list);
+void	handle_input(t_general *list, int i);
+void	handle_output(t_general *list, int i);
+void	handle_append(t_general *list, int i);
 
 // redirection_second.c
 void					handle_heredoc(t_general *list);
@@ -178,8 +171,8 @@ void					echo_flag_0_and_2(char *env, char *str, t_general *tmp,
 void					echo_flag_1(char *env, t_general *tmp, int i);
 
 // exit.c
-void					exit_cont(t_general *list, int a);
-void					exit_cmd(t_general *list);
+void					exit_cont(t_general *list, int a, t_env *env);
+void	exit_cmd(t_general *list, t_env *env, t_pipe *pipe, t_now *get);
 
 // unset.c
 void					unset_cmd_helper_func(t_env *node, t_env *pre_node,
@@ -188,5 +181,12 @@ void					unset_cmd(t_general *list, t_env **env);
 
 void					handle_signal(int signo);
 void					remove_heredoc(t_general *list);
+
+//free.c
+void free_env(t_env *env);
+void free_pipe_blocks(t_general *blocks);
+void free_pipe(t_pipe *pipe);
+void free_envp(t_now *get);
+void cleanup_all(t_general *pipe_blocs, t_env *env, t_now *get);
 
 #endif

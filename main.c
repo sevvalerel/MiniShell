@@ -6,7 +6,7 @@
 /*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:22:33 by bucolak           #+#    #+#             */
-/*   Updated: 2025/06/23 15:53:44 by buket            ###   ########.fr       */
+/*   Updated: 2025/07/09 01:15:54 by buket            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,113 +105,6 @@ void	print_pipes(t_general *pipe_block)
 	}
 	printf("-------------------\n");
 }
-// void	parse_input1(t_general *a)
-// {
-// 	int		len;
-// 	int		in_quotes;
-// 	char	current_quote;
-// 	char	starting_quote;
-// 	int		length;
-
-// 	int i, s, k;
-// 	while (a)
-// 	{
-// 		i = 0;
-// 		k = 0;
-// 		while (a->blocs[i])
-// 		{
-// 			// Boşlukları atla
-// 			while (a->blocs[i] == ' ')
-// 				i++;
-// 			if (a->blocs[i] == '\0')
-// 				break ;
-// 			// Redirection operatorleri kontrolü
-// 			if (a->blocs[i] == '<' || a->blocs[i] == '>')
-// 			{
-// 				len = 1;
-// 				if (a->blocs[i] == a->blocs[i + 1]) // << veya >>
-// 					len = 2;
-// 				a->acces_args->args[k++] = create_arg(ft_substr(a->blocs, i,
-// 							len), 5); // flag 5: redirection
-// 				i += len;
-// 				continue ;
-// 			}
-// 			// Pipe operatorü kontrolü
-// 			if (a->blocs[i] == '|')
-// 			{
-// 				a->acces_args->args[k++] = create_arg(ft_substr(a->blocs, i, 1),
-// 														6); // flag 6: pipe
-// 				i++;
-// 				continue ;
-// 			}
-// 			// Argüman başı
-// 			s = i;
-// 			in_quotes = 0;
-// 			current_quote = 0;
-// 			starting_quote = 0;
-// 			int flag = 2; // varsayılan: normal argüman
-// 			// İlk karakter tırnak mı?
-// 			if (a->blocs[i] == '"' || a->blocs[i] == '\'')
-// 			{
-// 				starting_quote = a->blocs[i];
-// 				in_quotes = 1;
-// 				current_quote = a->blocs[i];
-// 				i++;
-// 			}
-// 			// Argüman uzunluğu belirleme
-// 			while (a->blocs[i])
-// 			{
-// 				if (!in_quotes && (a->blocs[i] == ' ' || a->blocs[i] == '<'
-// 						|| a->blocs[i] == '>' || a->blocs[i] == '|'))
-// 					break ;
-// 				if (a->blocs[i] == '"' || a->blocs[i] == '\'')
-// 				{
-// 					if (in_quotes && a->blocs[i] == current_quote)
-// 					{
-// 						in_quotes = 0;
-// 						current_quote = 0;
-// 					}
-// 					else if (!in_quotes)
-// 					{
-// 						in_quotes = 1;
-// 						current_quote = a->blocs[i];
-// 					}
-// 				}
-// 				i++;
-// 			}
-// 			length = i - s;
-// 			// Flag belirleme
-// 			if (starting_quote != 0 && a->blocs[i - 1] == starting_quote)
-// 			{
-// 				// düzgün kapatılmış tırnak
-// 				flag = (starting_quote == '"') ? 0 : 1;
-// 				s++;
-// 				length -= 2;
-// 			}
-// 			else if (starting_quote != 0)
-// 			{
-// 				// kapatılmamış tırnak
-// 				flag = 4;
-// 			}
-// 			else
-// 			{
-// 				// dış tırnak yok ama içeride tırnak varsa -> karmaşık
-// 				for (int j = s; j < s + length; j++)
-// 				{
-// 					if (a->blocs[j] == '"' || a->blocs[j] == '\'')
-// 					{
-// 						flag = 4;
-// 						break ;
-// 					}
-// 				}
-// 			}
-// 			a->acces_args->args[k++] = create_arg(ft_substr(a->blocs, s,
-// 						length), flag);
-// 		}
-// 		a->acces_args->args[k] = NULL;
-// 		a = a->next;
-// 	}
-// }
 
 int	has_redireciton(t_general *pipe_blocks)
 {
@@ -233,11 +126,53 @@ int	has_redireciton(t_general *pipe_blocks)
 void	signal_handler(void)
 {
 	struct sigaction	sa;
-
+	ft_memset(&sa, 0, sizeof(sa));
 	sa.sa_flags = SA_SIGINFO;
 	sa.sa_handler = handle_signal;
 	sigaction(SIGINT, &sa, NULL);
 	signal(SIGQUIT, SIG_IGN);
+}
+
+int has_heredoc(t_general *list)
+{
+	int i = 0;
+	while (list->acces_args->args[i])
+	{
+		if(ft_strcmp(list->acces_args->args[i]->str, "<<") == 0)
+			return 1;
+		i++;
+	}
+	return 0;
+}
+
+void	init_pipe(t_pipe *pipe, t_general *list)
+{
+	pipe->count = 0;
+	pipe->tmp = list;
+	while (pipe->tmp)
+	{
+		pipe->count++;
+		pipe->tmp = pipe->tmp->next;
+	}
+	pipe->fd = malloc(sizeof(int *) * (pipe->count - 1));
+	pipe->pid = malloc(sizeof(pid_t) * pipe->count);
+}
+
+void	create_pipe(int count, int **fd)
+{
+	int	i;
+
+	i = 0;
+	while (i < count - 1)
+	{
+		fd[i] = malloc(sizeof(int) * 2);
+		if (pipe(fd[i]) == -1)
+		{
+			perror("pipe");
+			exit(1);
+		}
+		i++;
+	}
 }
 
 int	main(int argc, char *argv[], char **envp)
@@ -246,6 +181,7 @@ int	main(int argc, char *argv[], char **envp)
     t_general	*pipe_blocs;
     t_env		*env;
     t_now		*get;
+	t_pipe	*pipe;
     static int	first_run;
 
     pipe_blocs = NULL;
@@ -268,28 +204,36 @@ int	main(int argc, char *argv[], char **envp)
         if (line[0] == '\0')
         {
             free(line);
+            cleanup_all(pipe_blocs, env, get);
             continue;
         }
         add_history(line);
         pipe_parse(&pipe_blocs, line);
         signal_handler();
         parse_input(pipe_blocs);
-        handle_heredoc(pipe_blocs);
-
+		if(has_heredoc(pipe_blocs) == 1)
+        {
+            handle_heredoc(pipe_blocs);
+        }
         get = malloc(sizeof(t_now));
         get->envp = malloc(sizeof(char *) * (ft_lsttsize(env) + 1));
         fill_env(&env, get);
-
+		
         if (pipe_blocs->next)
-            handle_pipe(pipe_blocs, get, &env);
+		{
+			pipe = malloc(sizeof(t_pipe));
+			init_pipe(pipe, pipe_blocs);
+			create_pipe(pipe->count, pipe->fd);
+			handle_pipe(pipe_blocs, get, &env, pipe);
+		}
         else if (pipe_blocs->acces_args && pipe_blocs->acces_args->args[0])
         {
-            if ((!has_redireciton(pipe_blocs)
-                    && is_built_in(pipe_blocs->acces_args->args[0]->str)))
-            {
-                check_cmd_built_in(pipe_blocs, &env);
-                free(get->envp);
-                free(get);
+			if ((!has_redireciton(pipe_blocs)
+			&& is_built_in(pipe_blocs->acces_args->args[0]->str)))
+			{
+				check_cmd_built_in(pipe_blocs, &env, pipe, get);
+				// free_envp(get->envp);
+				// free(get);
             }
             else
             {
@@ -298,11 +242,15 @@ int	main(int argc, char *argv[], char **envp)
         }
         else
         {
-            free(get->envp);
-            free(get);
+			free_pipe_blocks(pipe_blocs);
+            // free_envp(get->envp);
+            // free(get);
         }
+		free_envp(get);
         pipe_blocs = create_general_node(pipe_blocs->dqm);
         free(line);
     }
+	free_env(env);
+	free_pipe_blocks(pipe_blocs);
     return 0;
 }

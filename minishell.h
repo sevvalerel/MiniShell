@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:05:46 by bucolak           #+#    #+#             */
-/*   Updated: 2025/07/09 21:46:14 by marvin           ###   ########.fr       */
+/*   Updated: 2025/07/25 16:33:47 by buket            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,6 +85,15 @@ typedef struct s_pipe
 	t_general			*tmp;
 }						t_pipe;
 
+typedef struct s_full
+{
+	t_general *pipe_blocks;
+	t_env **node;
+	t_pipe *pipe;
+	t_now *get;
+}	t_full;
+
+
 void					free_split(char **str);
 // apply_malloc.c
 //t_arg *create_arg(const char *str, int flag);
@@ -95,17 +104,16 @@ t_env					*create_env_node(void);
 
 // main.c
 void					pipe_parse(t_general **pipe_block, char *line);
-void					parse_input(t_general *a);
+void	parse_input(t_general *a);
 int has_heredoc(t_general *list);
 
 // execute.c
-void					check_cmd_sys_call(t_general *pipe_blocs, t_env **env,
-							t_now *get);
+void	check_cmd_sys_call(t_general *pipe_blocs, t_env **env, t_now *get, t_pipe *pipe);
 int						is_built_in(char *str);
 void					fill_env(t_env **env, t_now *get);
 void	handle_pipe(t_general *list, t_now *get, t_env **env, t_pipe *pipe);
 void					handle_redirections(t_general *pipe_blocs);
-void					execute_command(t_general *pipe_blocs, t_now *get);
+void	execute_command(t_general *pipe_blocs, t_now *get, t_pipe *pipe, t_env *envv);
 // cmd_built_in.c
 void	check_cmd_built_in(t_general *pipe_blocs, t_env **node, t_pipe *pipe, t_now *get);
 void	cd_cmd(t_arg **args, t_env *env, t_general *pipe_blocks);
@@ -171,7 +179,7 @@ void					echo_flag_0_and_2(char *env, char *str, t_general *tmp,
 void					echo_flag_1(char *env, t_general *tmp, int i);
 
 // exit.c
-void					exit_cont(t_general *list, int a, t_env *env);
+
 void	exit_cmd(t_general *list, t_env *env, t_pipe *pipe, t_now *get);
 
 // unset.c
@@ -187,6 +195,5 @@ void free_env(t_env *env);
 void free_pipe_blocks(t_general *blocks);
 void free_pipe(t_pipe *pipe);
 void free_envp(t_now *get);
-void cleanup_all(t_general *pipe_blocs, t_env *env, t_now *get);
 
 #endif

@@ -6,42 +6,41 @@
 /*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 15:29:26 by bucolak           #+#    #+#             */
-/*   Updated: 2025/07/09 01:21:44 by buket            ###   ########.fr       */
+/*   Updated: 2025/07/25 16:21:20 by buket            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-// t_arg *create_arg(const char *str, int flag)
-// {
-//     t_arg *arg = malloc(sizeof(t_arg));
-//     if (!arg)
-//         return NULL;
-//     arg->str = ft_strdup(str);
-//     arg->flag = flag;
-//     return arg;
-// }
+void complete_create_arg(char *str, char *new)
+{
+    int i;
+    int j;
+    
+    i = 0;
+    j = 0;
+    while(str[j])
+    {
+        if(str[j] != '"' && str[j] != '\'')
+        {
+            new[i] = str[j];
+            i++;
+        }
+        j++;
+    }
+    new[i] = '\0';
+}
+
 t_arg *create_arg(char *str, int flag, int type)
 {
     char *new;
-    int i = 0;
-    int j = 0;
     t_arg *arg = malloc(sizeof(t_arg));
     if (!arg)
         return NULL;
     new =ft_calloc((ft_strlen(str)+1), sizeof(char));
     if(type == 4)
     {
-        while(str[j])
-        {
-            if(str[j] != '"' && str[j] != '\'')
-            {
-                new[i] = str[j];
-                i++;
-            }
-            j++;
-        }
-        new[i] = '\0';
+        complete_create_arg(str, new);
         arg->str = ft_strdup(new);
         free(new);
         arg->flag = flag;
@@ -53,18 +52,12 @@ t_arg *create_arg(char *str, int flag, int type)
     free(str);
     return arg;
 }
+
 t_pipeafter *create_pipeafter(void)
 {
     t_pipeafter *pa = malloc(sizeof(t_pipeafter));
     if (!pa)
     {
-        free(pa);
-        return NULL;
-    }
-    pa->args = ft_calloc(100, sizeof(t_arg *)); // max arg 100 (geliştirilebilir)
-    if (!pa->args)
-    {
-        free(pa->args);
         free(pa);
         return NULL;
     }
@@ -83,8 +76,10 @@ t_general *create_general_node(int dqm)
     last_dqm = dqm;
     node->dqm = last_dqm;
     node->acces_args = create_pipeafter();
+    node->acces_args->args=NULL;
     node->heredoc_fd = -1;
     node->blocs = NULL;
+    node->limiter = NULL;
     node->next = NULL;
     return node;
 }
@@ -94,6 +89,7 @@ t_env *create_env_node(void)
     t_env *node = malloc(sizeof(t_env));
     if (!node)
         return NULL;
+    node->key = NULL;
     node->data = NULL;
     node->next = NULL;
     return node;

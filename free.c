@@ -6,7 +6,7 @@
 /*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/20 16:12:21 by bucolak           #+#    #+#             */
-/*   Updated: 2025/07/09 01:14:25 by buket            ###   ########.fr       */
+/*   Updated: 2025/07/18 23:13:37 by buket            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,36 +45,59 @@ void free_env(t_env *env)
 void free_pipe_blocks(t_general *blocks)
 {
     t_general *tmp;
+    t_general *next;
     int i;
+
     tmp = blocks;
-    while(tmp)
+    while (tmp)
     {
         i = 0;
-        while(tmp->acces_args->args[i])
+        if (tmp->acces_args && tmp->acces_args->args)
         {
-            if(tmp->acces_args->args[i]->str)
-                free(tmp->acces_args->args[i]->str);
-            free(tmp->acces_args->args[i]);
-            i++;
+            while (tmp->acces_args->args[i])
+            {
+                if (tmp->acces_args->args[i]->str)
+                {
+                    free(tmp->acces_args->args[i]->str);
+                    tmp->acces_args->args[i]->str = NULL;
+                }
+                free(tmp->acces_args->args[i]);
+                i++;
+            }
+            free(tmp->acces_args->args);
+            if (tmp->acces_args)
+                free(tmp->acces_args);
         }
-        free(tmp->acces_args->args);
-        free(tmp->acces_args);
-        tmp = tmp->next;
+        i = 0;
+        if (tmp->limiter)
+        {
+            while(tmp->limiter[i])
+            {
+                free(tmp->limiter[i]);
+                i++;
+            }
+        }
+        free(tmp->limiter);
+        if (tmp->blocs)
+            free(tmp->blocs);
+        next = tmp->next;
+        free(tmp);
+        tmp = next;
     }
 }
 
 void free_pipe(t_pipe *pipe)
 {
     int i = 0;
-    while(pipe->fd[i])
+    while(i < pipe->count-1)
     {
         free(pipe->fd[i]);
         i++;
     }   
     free(pipe->fd);
     free(pipe->pid);
-    free(pipe->tmp);
     free(pipe);
+    pipe = NULL;
 }
 
 void free_envp(t_now *get)
@@ -88,5 +111,4 @@ void free_envp(t_now *get)
     }
     free(get->envp);
     free(get);
-    get = NULL;
 }

@@ -6,7 +6,7 @@
 /*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:22:33 by bucolak           #+#    #+#             */
-/*   Updated: 2025/07/09 01:15:54 by buket            ###   ########.fr       */
+/*   Updated: 2025/07/24 17:35:38 by buket            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -182,29 +182,30 @@ int	main(int argc, char *argv[], char **envp)
     t_env		*env;
     t_now		*get;
 	t_pipe	*pipe;
+	int last_dqm;
     static int	first_run;
-
-    pipe_blocs = NULL;
     (void)argc;
     (void)argv;
-    pipe_blocs = create_general_node(0);
-    pipe_blocs->heredoc_fd = -1;
     first_run = 1;
+	last_dqm = 0;
+	pipe = NULL;
     env = create_env_node();
     if (first_run)
     {
-        get_env(&env, envp);
+		get_env(&env, envp);
         first_run = 0;
     }
     while (1)
     {
+		pipe_blocs = create_general_node(last_dqm);
         line = readline("Our_shell% ");
         if (!line)
+		{
             exit(1);
+		}
         if (line[0] == '\0')
         {
             free(line);
-            cleanup_all(pipe_blocs, env, get);
             continue;
         }
         add_history(line);
@@ -232,25 +233,25 @@ int	main(int argc, char *argv[], char **envp)
 			&& is_built_in(pipe_blocs->acces_args->args[0]->str)))
 			{
 				check_cmd_built_in(pipe_blocs, &env, pipe, get);
-				// free_envp(get->envp);
-				// free(get);
             }
             else
             {
-                check_cmd_sys_call(pipe_blocs, &env, get);
+                check_cmd_sys_call(pipe_blocs, &env, get, pipe);
             }
         }
         else
         {
 			free_pipe_blocks(pipe_blocs);
-            // free_envp(get->envp);
-            // free(get);
         }
 		free_envp(get);
-        pipe_blocs = create_general_node(pipe_blocs->dqm);
+		last_dqm = pipe_blocs->dqm;
+		if(pipe_blocs->heredoc_fd!=-1)
+			close(pipe_blocs->heredoc_fd);
+		free_pipe_blocks(pipe_blocs);
         free(line);
     }
 	free_env(env);
+	free_envp(get);
 	free_pipe_blocks(pipe_blocs);
     return 0;
 }

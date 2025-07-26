@@ -6,7 +6,7 @@
 /*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/13 18:16:02 by bucolak           #+#    #+#             */
-/*   Updated: 2025/07/09 00:56:04 by buket            ###   ########.fr       */
+/*   Updated: 2025/07/18 23:11:09 by buket            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,7 +72,7 @@ void	direct_cmd(t_general *tmp, t_now *get, t_env **env, t_pipe *pipe)
 		exit(tmp->dqm);
 	}
 	else
-		execute_command(tmp, get);
+		execute_command(tmp, get,pipe, *env);
 }
 
 void	direct_and_close_fd(int count, int **fd, int i, int type)
@@ -106,12 +106,12 @@ void	free_and_wait(int count, pid_t *pid, int **fd)
 {
 	int	i;
 
-	i = 0;
-	while (i < count)
-	{
-		waitpid(pid[i], NULL, 0);
-		i++;
-	}
+	// i = 0;
+	// while (i < count)
+	// {
+	// 	waitpid(pid[i], NULL, 0);
+	// 	i++;
+	// }
 	i = 0;
 	while (i < count - 1)
 	{
@@ -124,13 +124,8 @@ void	free_and_wait(int count, pid_t *pid, int **fd)
 
 void	handle_pipe(t_general *list, t_now *get, t_env **env, t_pipe *pipe)
 {
-	//t_pipe	*pipe;
 	int status;
 	int		i;
-
-	// pipe = malloc(sizeof(t_pipe));
-	// init_pipe(pipe, list);
-	// create_pipe(pipe->count, pipe->fd);
 	pipe->tmp = list;
 	i = 0;
 	while (i < pipe->count)
@@ -160,5 +155,5 @@ void	handle_pipe(t_general *list, t_now *get, t_env **env, t_pipe *pipe)
 	}
 	if (WIFEXITED(status))
 		list->dqm = WEXITSTATUS(last_status);
-	free_and_wait(pipe->count, pipe->pid, pipe->fd);
+	//free_and_wait(pipe->count, pipe->pid, pipe->fd);
 }

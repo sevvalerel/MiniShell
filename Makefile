@@ -16,7 +16,6 @@ SRC = main.c \
 	  pipe.c \
 	  signals.c \
 	  parser.c	\
-	  cleanup.c \
 	  free.c
 
 CC = gcc 

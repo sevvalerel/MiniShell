@@ -154,7 +154,7 @@ void	pwd_cmd(char **ar, t_general *list)
 		list->dqm = 0;
 		if (!line)
 		{
-			printf("Error\n");
+			printf("Error\n");	line = getenv("HOME");
 			free(line);
 			list->dqm = 1;
 			return ;

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
+/*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:22:33 by bucolak           #+#    #+#             */
-/*   Updated: 2025/07/24 17:35:38 by buket            ###   ########.fr       */
+/*   Updated: 2025/07/26 17:27:45 by bucolak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,14 +135,19 @@ void	signal_handler(void)
 
 int has_heredoc(t_general *list)
 {
-	int i = 0;
-	while (list->acces_args->args[i])
-	{
-		if(ft_strcmp(list->acces_args->args[i]->str, "<<") == 0)
-			return 1;
-		i++;
-	}
-	return 0;
+    int i = 0;
+
+    if (!list || !list->acces_args || !list->acces_args->args)
+        return 0;
+        
+    while (list->acces_args->args[i])
+    {
+        if (list->acces_args->args[i]->str && 
+            ft_strcmp(list->acces_args->args[i]->str, "<<") == 0)
+            return 1;
+        i++;
+    }
+    return 0;
 }
 
 void	init_pipe(t_pipe *pipe, t_general *list)
@@ -175,6 +180,59 @@ void	create_pipe(int count, int **fd)
 	}
 }
 
+// Replace all occurrences of $? in each argument string with the exit code (as string)
+// char *expand_exit_code(const char *arg, const char *exit_code_str)
+// {
+// 	size_t arg_len = strlen(arg);
+// 	size_t code_len = strlen(exit_code_str);
+// 	size_t new_len = 0;
+// 	// Calculate new length
+// 	for (size_t i = 0; i < arg_len; ) {
+// 		if (arg[i] == '$' && arg[i+1] == '?') {
+// 			new_len += code_len;
+// 			i += 2;
+// 		} else {
+// 			new_len++;
+// 			i++;
+// 		}
+// 	}
+// 	char *result = malloc(new_len + 1);
+// 	if (!result) return NULL;
+// 	size_t j = 0;
+// 	for (size_t i = 0; i < arg_len; ) {
+// 		if (arg[i] == '$' && arg[i+1] == '?') {
+// 			memcpy(result + j, exit_code_str, code_len);
+// 			j += code_len;
+// 			i += 2;
+// 		} else {
+// 			result[j++] = arg[i++];
+// 		}
+// 	}
+// 	result[j] = '\0';
+// 	return result;
+// }
+
+// void exit_code_in_args(t_general *list)
+// {
+// 	t_general *tmp = list;
+// 	int i;
+// 	char *expanded;
+// 	char exit_code_str[12];
+// 	while (tmp) {
+// 		snprintf(exit_code_str, sizeof(exit_code_str), "%d", tmp->dqm);
+// 		i = 0;
+// 		while (tmp->acces_args->args[i]) {
+// 			if (strstr(tmp->acces_args->args[i]->str, "$?")) {
+// 				expanded = expand_exit_code(tmp->acces_args->args[i]->str, exit_code_str);
+// 				free(tmp->acces_args->args[i]->str);
+// 				tmp->acces_args->args[i]->str = expanded;
+// 			}
+// 			i++;
+// 		}
+// 		tmp = tmp->next;
+// 	}
+// }
+
 int	main(int argc, char *argv[], char **envp)
 {
     char		*line;
@@ -189,6 +247,7 @@ int	main(int argc, char *argv[], char **envp)
     first_run = 1;
 	last_dqm = 0;
 	pipe = NULL;
+	get = NULL;
     env = create_env_node();
     if (first_run)
     {
@@ -197,21 +256,32 @@ int	main(int argc, char *argv[], char **envp)
     }
     while (1)
     {
+		signal_handler();
 		pipe_blocs = create_general_node(last_dqm);
         line = readline("Our_shell% ");
-        if (!line)
+       if (!line)
 		{
-            exit(1);
+            if (pipe_blocs)
+                free_pipe_blocks(pipe_blocs);
+            if (env)
+                free_env(env);
+            if (get)
+                free_envp(get);
+            if (pipe)
+                free_pipe(pipe);
+            exit(0);
 		}
         if (line[0] == '\0')
         {
+			free_pipe_blocks(pipe_blocs);
             free(line);
             continue;
         }
         add_history(line);
         pipe_parse(&pipe_blocs, line);
-        signal_handler();
         parse_input(pipe_blocs);
+		//exit_code_in_args(pipe_blocs);
+		//print_pipes(pipe_blocs);
 		if(has_heredoc(pipe_blocs) == 1)
         {
             handle_heredoc(pipe_blocs);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:22:33 by bucolak           #+#    #+#             */
-/*   Updated: 2025/07/28 10:10:59 by marvin           ###   ########.fr       */
+/*   Updated: 2025/08/09 21:17:32 by bucolak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,8 +68,6 @@ void	pipe_parse(t_general **pipe_block, char *line)
 	free(trimmed);
 }
 
-// Tırnak kontrolü için yardımcı fonksiyon
-
 void	print_pipes(t_general *pipe_block)
 {
 	t_general	*tmp;
@@ -95,7 +93,8 @@ void	print_pipes(t_general *pipe_block)
 				{
 					printf("    Arg %d: %s", i + 1,
 							tmp->acces_args->args[i]->str);
-					printf(" (flag: %d)\n", tmp->acces_args->args[i]->flag);
+					printf(" (flag: %d)", tmp->acces_args->args[i]->flag);
+					printf("(s-lag: %d)\n", tmp->acces_args->args[i]->s);
 					i++;
 				}
 			}
@@ -123,14 +122,10 @@ int	has_redireciton(t_general *pipe_blocks)
 	return (0);
 }
 
-void	signal_handler(void)
+void signal_handler(void)
 {
-	struct sigaction	sa;
-	ft_memset(&sa, 0, sizeof(sa));
-	sa.sa_flags = SA_SIGINFO;
-	sa.sa_handler = handle_signal;
-	sigaction(SIGINT, &sa, NULL);
-	signal(SIGQUIT, SIG_IGN);
+    signal(SIGINT, handle_signal);
+    signal(SIGQUIT, SIG_IGN);
 }
 
 int has_heredoc(t_general *list)
@@ -143,7 +138,7 @@ int has_heredoc(t_general *list)
 	while (list->acces_args->args[i])
 	{
 		if (list->acces_args->args[i]->str && 
-			ft_strcmp(list->acces_args->args[i]->str, "<<") == 0)
+			ft_strcmp(list->acces_args->args[i]->str, "<<") == 0 && i!=0)
 			return 1;
 		i++;
 	}
@@ -180,78 +175,227 @@ void	create_pipe(int count, int **fd)
 	}
 }
 
-// Replace all occurrences of $? in each argument string with the exit code (as string)
-// char *expand_exit_code(const char *arg, const char *exit_code_str)
-// {
-// 	size_t arg_len = strlen(arg);
-// 	size_t code_len = strlen(exit_code_str);
-// 	size_t new_len = 0;
-// 	// Calculate new length
-// 	for (size_t i = 0; i < arg_len; ) {
-// 		if (arg[i] == '$' && arg[i+1] == '?') {
-// 			new_len += code_len;
-// 			i += 2;
-// 		} else {
-// 			new_len++;
-// 			i++;
-// 		}
-// 	}
-// 	char *result = malloc(new_len + 1);
-// 	if (!result) return NULL;
-// 	size_t j = 0;
-// 	for (size_t i = 0; i < arg_len; ) {
-// 		if (arg[i] == '$' && arg[i+1] == '?') {
-// 			memcpy(result + j, exit_code_str, code_len);
-// 			j += code_len;
-// 			i += 2;
-// 		} else {
-// 			result[j++] = arg[i++];
-// 		}
-// 	}
-// 	result[j] = '\0';
-// 	return result;
-// }
+int count_m(t_general *tmp, int i, t_env *env)
+{
+	int j;
+	int c;
+	int start;
+	char *str;
+	char *a;
+	
+	c = 0;
+	j = 0;
+	while(tmp->acces_args->args[i]->str[j])
+	{
+		if(tmp->acces_args->args[i]->str[j] == '$' && 
+            tmp->acces_args->args[i]->str[j+1] && 
+            tmp->acces_args->args[i]->str[j+1] != '?' && 
+            tmp->acces_args->args[i]->flag != 1 &&
+			tmp->acces_args->args[i]->str[j+1] != ' ')
+			{
+				j++;
+				start = j;
+				while(tmp->acces_args->args[i]->str[j] && tmp->acces_args->args[i]->str[j] != ' ' && tmp->acces_args->args[i]->str[j] != '$')
+					j++;
+				a =ft_substr(tmp->acces_args->args[i]->str, start, j-start);
+				if(a)
+					str = get_getenv(env, a);
+				if(str)
+					c += ft_strlen(str);
+				free(a);
+			}
+			else
+				c++;
+		j++;
+	}
+	return c;
+}
 
-// void exit_code_in_args(t_general *list)
-// {
-// 	t_general *tmp = list;
-// 	int i;
-// 	char *expanded;
-// 	char exit_code_str[12];
-// 	while (tmp) {
-// 		snprintf(exit_code_str, sizeof(exit_code_str), "%d", tmp->dqm);
-// 		i = 0;
-// 		while (tmp->acces_args->args[i]) {
-// 			if (strstr(tmp->acces_args->args[i]->str, "$?")) {
-// 				expanded = expand_exit_code(tmp->acces_args->args[i]->str, exit_code_str);
-// 				free(tmp->acces_args->args[i]->str);
-// 				tmp->acces_args->args[i]->str = expanded;
-// 			}
-// 			i++;
-// 		}
-// 		tmp = tmp->next;
-// 	}
-// }
+void expand_dolar(t_general *list, t_env *env)
+{
+	t_general *tmp;
+	char *new;
+	char *str;
+	new = NULL;
+	str = NULL;
+	char *a;
+	int i;
+	int start;	
+	int l;
+	int j;
+	int k;
+	int flag;
 
+	flag = 0;
+	tmp = list;
+	while(tmp)
+	{
+		i = 0;
+		while(tmp->acces_args->args[i])
+		{
+			j = 0;
+			if((ft_strcmp(tmp->acces_args->args[i]->str, "$empty") == 0 || ft_strcmp(tmp->acces_args->args[i]->str, "$EMPTY") == 0) && tmp->acces_args->args[i]->flag == 2)
+			{
+				// Argümanı sil
+				free(tmp->acces_args->args[i]->str);
+				free(tmp->acces_args->args[i]);
+				// Argümanları kaydır
+				l = i;
+				while(tmp->acces_args->args[l + 1]) 
+				{
+					tmp->acces_args->args[l] = tmp->acces_args->args[l+1];
+					l++;
+				}
+				tmp->acces_args->args[l] = NULL;
+				// i'yi arttırma, çünkü kaydırma yaptık
+				continue;
+			}
+			new= malloc(sizeof(char) * (count_m(tmp, i, env) +1));
+			k = 0;
+			while(tmp->acces_args->args[i]->str[j])
+			{
+				if(tmp->acces_args->args[i]->str[j] == '$' && 
+                   		tmp->acces_args->args[i]->str[j+1] && 
+                   		tmp->acces_args->args[i]->str[j+1] != '?' && 
+                   		tmp->acces_args->args[i]->flag != 1 &&
+						tmp->acces_args->args[i]->str[j+1] != ' ')
+				{
+					j++;
+					start = j;
+					while(tmp->acces_args->args[i]->str[j] && tmp->acces_args->args[i]->str[j] != ' ' && tmp->acces_args->args[i]->str[j] != '$')
+						j++;
+					a =ft_substr(tmp->acces_args->args[i]->str, start, j-start);
+					if (a && tmp->acces_args->args[i]->flag != 1)
+					{
+					    flag = 1;
+					    str = get_getenv(env, a);
+					}
+					if (str && str[0] != '\0' && flag == 1) 
+					{	
+					    ft_memcpy(new + k, str, ft_strlen(str));
+					    k += ft_strlen(str);
+					}
+					else
+					{
+						ft_memcpy(new + k, tmp->acces_args->args[i]->str, ft_strlen(tmp->acces_args->args[i]->str));
+						k+= ft_strlen(tmp->acces_args->args[i]->str);
+					}
+					if(a)
+                    	free(a);
+				}
+				else
+				{
+					new[k++] = tmp->acces_args->args[i]->str[j];
+					j++;
+				}
+			}
+			
+			new[k]='\0';
+			if(tmp->acces_args->args[i] && tmp->acces_args->args[i]->str)
+            {
+                free(tmp->acces_args->args[i]->str);
+            }
+			tmp->acces_args->args[i]->str = new;
+			if(tmp->acces_args->args[i] && !tmp->acces_args->args[i]->str[0])
+			{
+				if(tmp->acces_args->args[i]->str)
+					free(tmp->acces_args->args[i]->str);
+				if(tmp->acces_args->args[i])
+    				free(tmp->acces_args->args[i]);
+				l = i;
+				while(tmp->acces_args->args[l + 1]) 
+    			{
+    			    tmp->acces_args->args[l] = tmp->acces_args->args[l+1];
+    			    l++;
+    			}
+    			tmp->acces_args->args[l] = NULL; 
+				continue;
+			}
+			i++;
+		}
+		tmp = tmp->next;	
+	}	
+}
+
+char *get_getenv(t_env *env, char *key)
+{
+	t_env *tmp;
+
+	tmp = env;
+	while(tmp)
+	{
+		if(ft_strncmp(key, tmp->key, ft_strlen(key)) == 0)
+			return tmp->data;
+		tmp = tmp->next;
+	}
+	return NULL;
+}
+
+void connect_count_malloc(t_general *list)
+{
+	t_general *tmp;
+	tmp = list;
+	int i;
+	int c;
+	int j;
+	char *new;
+	i = 0;
+
+	while(tmp)
+	{
+		i = 0;
+		while(tmp->acces_args->args[i])
+		{
+			if(tmp->acces_args->args[i]->s == 0 && tmp->acces_args->args[i+1])
+			{
+				c = ft_strlen(tmp->acces_args->args[i]->str) + ft_strlen(tmp->acces_args->args[i+1]->str);
+				new = malloc(sizeof(char) * (c+1));
+				ft_strlcpy(new, tmp->acces_args->args[i]->str, c+1);
+                ft_strlcat(new, tmp->acces_args->args[i+1]->str,c+1);
+				free(tmp->acces_args->args[i+1]->str);
+				free(tmp->acces_args->args[i+1]);
+				
+				free(tmp->acces_args->args[i]->str);
+				tmp->acces_args->args[i]->str = new;
+				tmp->acces_args->args[i]->s = 1;
+				j = i+1;
+				while(tmp->acces_args->args[j])
+				{
+					tmp->acces_args->args[j] = tmp->acces_args->args[j+1];
+					j++;
+				}
+				tmp->acces_args->args[j] = NULL;
+				continue;
+			}
+			i++;
+		}
+		tmp = tmp->next;
+	}	
+}
+ 
 int	main(int argc, char *argv[], char **envp)
 {
 	char		*line;
 	t_general	*pipe_blocs;
 	t_env		*env;
 	t_now		*get;
+	t_full full;
 	t_pipe	*pipe;
 	int last_dqm;
 	static int	first_run;
+	int exit_code;
 	(void)argc;
 	(void)argv;
 	first_run = 1;
 	last_dqm = 0;
 	pipe = NULL;
+	pipe_blocs = NULL;
 	get = NULL;
 	env = create_env_node();
 	if (first_run)
 	{
 		get_env(&env, envp);
+		full.node = env;
 		first_run = 0;
 	}
 	while (1)
@@ -259,49 +403,64 @@ int	main(int argc, char *argv[], char **envp)
 		signal_handler();
 		pipe_blocs = create_general_node(last_dqm);
 		line = readline("Our_shell% ");
-	   if (!line)
+		if (!line)
 		{
 			if (pipe_blocs)
-				free_pipe_blocks(pipe_blocs);
-			if (env)
 			{
-				free_env(env);
-				get=NULL;
+				exit_code = pipe_blocs->dqm;
+				free_pipe_blocks(pipe_blocs);
+				pipe_blocs = NULL;
 			}
 			if (get)
 			{
 				free_envp(get);
 				get = NULL;
 			}
+			if (env)
+			{
+				free_env(env);
+				env = NULL;
+			}
 			if (pipe)
+			{
 				free_pipe(pipe);
-			exit(0);
+				pipe = NULL;
+			}
+			exit(exit_code);
 		}
 		if (line[0] == '\0')
 		{
 			free_pipe_blocks(pipe_blocs);
+			pipe_blocs = NULL;
 			free(line);
 			continue;
 		}
 		add_history(line);
 		pipe_parse(&pipe_blocs, line);
 		parse_input(pipe_blocs);
-		//exit_code_in_args(pipe_blocs);
+		expand_dolar(pipe_blocs, env);
 		//print_pipes(pipe_blocs);
+		connect_count_malloc(pipe_blocs);
+		full.pipe_blocks = pipe_blocs;
 		if(has_heredoc(pipe_blocs) == 1)
 		{
 			handle_heredoc(pipe_blocs);
 		}
 		get = malloc(sizeof(t_now));
 		get->envp = malloc(sizeof(char *) * (ft_lsttsize(env) + 1));
-		fill_env(&env, get);
 		
+		fill_env(&env, get);
+		full.get = get;
 		if (pipe_blocs->next)
 		{
 			pipe = malloc(sizeof(t_pipe));
 			init_pipe(pipe, pipe_blocs);
 			create_pipe(pipe->count, pipe->fd);
-			handle_pipe(pipe_blocs, get, &env, pipe);
+			full.pipe = pipe;
+			handle_pipe(pipe_blocs, get, &env, pipe,&full);
+			
+			free_pipe(pipe);
+            pipe = NULL;
 		}
 		else if (pipe_blocs->acces_args && pipe_blocs->acces_args->args[0])
 		{
@@ -312,12 +471,8 @@ int	main(int argc, char *argv[], char **envp)
 			}
 			else
 			{
-				check_cmd_sys_call(pipe_blocs, &env, get, pipe);
+				check_cmd_sys_call(pipe_blocs, &env, get, pipe,&full);
 			}
-		}
-		else
-		{
-			free_pipe_blocks(pipe_blocs);
 		}
 		free_envp(get);
 		get = NULL;
@@ -325,11 +480,11 @@ int	main(int argc, char *argv[], char **envp)
 		if(pipe_blocs->heredoc_fd!=-1)
 			close(pipe_blocs->heredoc_fd);
 		free_pipe_blocks(pipe_blocs);
+		pipe_blocs = NULL;
 		free(line);
 	}
 	free_env(env);
 	free_envp(get);
-	get = NULL;
 	free_pipe_blocks(pipe_blocs);
 	return 0;
 }

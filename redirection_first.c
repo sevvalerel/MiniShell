@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   redirection_first.c                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
+/*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/09 12:51:00 by bucolak           #+#    #+#             */
-/*   Updated: 2025/07/15 00:18:18 by buket            ###   ########.fr       */
+/*   Updated: 2025/08/05 14:57:26 by bucolak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ void	renew_else_block(t_arg ***new, t_general *tmp, int *i, int *j)
 	(*new)[*j] = malloc(sizeof(t_arg));
 	(*new)[*j]->str = ft_strdup(tmp->acces_args->args[*i]->str);
 	(*new)[*j]->flag = tmp->acces_args->args[*i]->flag;
+	(*new)[*j]->s = tmp->acces_args->args[*i]->s;  
 }
 
 void	renew_block2(t_general *list)
@@ -73,6 +74,7 @@ void	handle_output(t_general *list, int i)
 {
 	int	fd;
 	char *last_input;
+	int exit_code;
 	int last_fd;
 	last_fd = -1;
 	if (ft_strcmp(list->acces_args->args[i]->str, ">") == 0)
@@ -85,7 +87,9 @@ void	handle_output(t_general *list, int i)
 			if(access(last_input, F_OK) != 0)
 			{
 				error_msg(2, last_input, 0, list);
-				exit(list->dqm);
+				exit_code = list->dqm;
+				free_pipe_blocks(list);
+        		exit(exit_code);
 			}
 			if (access(last_input, W_OK) != 0)
 			{
@@ -94,14 +98,18 @@ void	handle_output(t_general *list, int i)
 				ft_putstr_fd(last_input, 2);
 				ft_putstr_fd(": Permission denied\n", 2);
 				list->dqm = 1;
-				exit(list->dqm);
+				exit_code = list->dqm;
+				free_pipe_blocks(list);
+        		exit(exit_code);
 			}
 			if (fd < 0)
 			{
 				//printf("burda2\n");
 				error_msg(i, list->acces_args->args[i]->str, 0, list);
 				list->dqm = 1;
-				exit(list->dqm);
+				exit_code = list->dqm;
+				free_pipe_blocks(list);
+        		exit(exit_code);
 			}
 			if(last_fd !=-1)
 				close(last_fd);
@@ -110,7 +118,9 @@ void	handle_output(t_general *list, int i)
 		else
 		{
 			error_msg(2, NULL, 3, list);
-			exit(list->dqm) ;
+			exit_code = list->dqm;
+			free_pipe_blocks(list);
+        	exit(exit_code);
 		}
 	}
 	if(last_fd!=-1)
@@ -126,6 +136,7 @@ void	handle_input(t_general *list, int i)
 	int	fd;
 	char *last_input;
 	int last_fd;
+	int exit_code;
 	last_fd = -1;
 	// while (list->acces_args->args[i])
 	// {
@@ -140,7 +151,9 @@ void	handle_input(t_general *list, int i)
 				if(access(last_input, F_OK) != 0)
 				{
 					error_msg(2, last_input, 0, list);
-					exit(list->dqm);
+					exit_code = list->dqm;
+					free_pipe_blocks(list);
+        			exit(exit_code);
 				}
 				if (access(last_input, R_OK) != 0)
 				{
@@ -149,14 +162,18 @@ void	handle_input(t_general *list, int i)
 					ft_putstr_fd(last_input, 2);
 					ft_putstr_fd(": Permission denied\n", 2);
 					list->dqm = 1;
-					exit(list->dqm);
+					exit_code = list->dqm;
+					free_pipe_blocks(list);
+        			exit(exit_code);
 				}
 				
 				if (fd < 0)
 				{
 					error_msg(i, list->acces_args->args[i]->str, 0, list);
 					list->dqm = 1;
-					exit(list->dqm);
+					exit_code = list->dqm;
+					free_pipe_blocks(list);
+        			exit(exit_code);
 				}
 				if(last_fd !=-1)
 					close(last_fd);
@@ -165,7 +182,9 @@ void	handle_input(t_general *list, int i)
 			else
 			{
 				error_msg(2, NULL, 3, list);
-                exit(list->dqm);
+                exit_code = list->dqm;
+				free_pipe_blocks(list);
+        		exit(exit_code);
 			}
 		}
 	// 	i++;

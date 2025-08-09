@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   free.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/20 16:12:21 by bucolak           #+#    #+#             */
-/*   Updated: 2025/07/28 10:12:25 by marvin           ###   ########.fr       */
+/*   Updated: 2025/08/07 16:20:39 by buket            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,14 +29,20 @@ void free_split(char **str)
 void free_env(t_env *env)
 {
     t_env *tmp;
-    tmp = env;
-    while(tmp)
+    
+    while (env)
     {
         tmp = env->next;
         if (env->key)
+        {
             free(env->key);
+            env->key = NULL;
+        }
         if (env->data)
+        {
             free(env->data);
+            env->data = NULL;
+        }
         free(env);
         env = tmp;
     }
@@ -47,11 +53,10 @@ void free_pipe_blocks(t_general *blocks)
     t_general *tmp;
     t_general *next;
     int i;
-
+    if (!blocks) return;
     tmp = blocks;
     while (tmp)
     {
-        // Free acces_args and its args
         if (tmp->acces_args)
         {
             if (tmp->acces_args->args)
@@ -61,14 +66,17 @@ void free_pipe_blocks(t_general *blocks)
                 {
                     if (tmp->acces_args->args[i]->str)
                         free(tmp->acces_args->args[i]->str);
-                    free(tmp->acces_args->args[i]);
+                    if(tmp->acces_args->args[i])
+                        free(tmp->acces_args->args[i]);
+                    tmp->acces_args->args[i] = NULL;
                     i++;
                 }
-                free(tmp->acces_args->args);
+                if(tmp->acces_args->args)
+                    free(tmp->acces_args->args);
             }
-            free(tmp->acces_args);
+            if(tmp->acces_args)
+                free(tmp->acces_args);
         }
-        // Free limiter array
         if (tmp->limiter)
         {
             i = 0;
@@ -79,7 +87,6 @@ void free_pipe_blocks(t_general *blocks)
             }
             free(tmp->limiter);
         }
-        // Free blocs string
         if (tmp->blocs)
             free(tmp->blocs);
         next = tmp->next;

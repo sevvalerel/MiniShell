@@ -3,62 +3,69 @@
 /*                                                        :::      ::::::::   */
 /*   unset.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
+/*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 16:45:34 by bucolak           #+#    #+#             */
-/*   Updated: 2025/08/07 16:19:30 by buket            ###   ########.fr       */
+/*   Updated: 2025/08/10 02:40:36 by seerel           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
+#include <stdlib.h>
 
-void remove_env_var(t_env **env, char *var_name)
+static void	free_and_null(void **ptr)
 {
-    t_env *current = *env;
-    t_env *prev = NULL;
-    size_t name_len = ft_strlen(var_name);
-    
-    if (!env || !*env || !var_name)
-        return;
-    
-    while (current)
-    {
-        if (ft_strcmp(current->key, var_name) == 0
-            && (current->key[name_len] == '=' || current->key[name_len] == '\0'))
-        {
-            if (prev == NULL)
-                *env = current->next;
-            else
-                prev->next = current->next;            
-            if (current->key)
-            {
-                free(current->key);
-                current->key = NULL;
-            }
-            if (current->data)
-            {
-                free(current->data);
-                current->data = NULL;
-            }
-            free(current);
-            current = NULL;
-            return;
-        }
-        prev = current;
-        current = current->next;
-    }
+	if (ptr && *ptr)
+	{
+		free(*ptr);
+		*ptr = NULL;
+	}
 }
 
-void unset_cmd(t_general *list, t_env **env)
+void	remove_env_node(t_env **env, t_env *current, t_env *prev)
 {
-	int i = 1;
+	if (!prev)
+		*env = current->next;
+	else
+		prev->next = current->next;
+	free_and_null((void **)&current->key);
+	free_and_null((void **)&current->data);
+	free_and_null((void **)&current);
+}
 
+void	remove_env_var(t_env **env, char *var_name)
+{
+	t_env	*current;
+	t_env	*prev;
+	size_t	name_len;
+
+	if (!env || !*env || !var_name)
+		return ;
+	name_len = ft_strlen(var_name);
+	current = *env;
+	prev = NULL;
+	while (current)
+	{
+		if (ft_strcmp(current->key, var_name) == 0 && (!current->key[name_len]
+				|| current->key[name_len] == '='))
+		{
+			remove_env_node(env, current, prev);
+			return ;
+		}
+		prev = current;
+		current = current->next;
+	}
+}
+
+void	unset_cmd(t_general *list, t_env **env)
+{
+	int	i;
+
+	i = 1;
 	while (list->acces_args->args[i])
 	{
 		if (list->acces_args->args[i]->str)
-		{
 			remove_env_var(env, list->acces_args->args[i]->str);
-		}
 		i++;
 	}
 	list->dqm = 0;

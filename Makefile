@@ -8,7 +8,9 @@ SRC = main.c \
 	  etc.c \
 	  apply_malloc.c \
 	  redirection_first.c \
+	  redirection_first_2.c \
 	  redirection_second.c \
+	  redirection_second_2.c \
 	  echo_first.c \
 	  echo_second.c \
 	  exit.c \
@@ -16,7 +18,7 @@ SRC = main.c \
 	  pipe.c \
 	  signals.c \
 	  parser.c	\
-	  free.c
+	  free.c \
 
 CC = gcc 
 

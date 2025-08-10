@@ -22,6 +22,16 @@ void free_pipeafter(t_pipeafter *pa) {
     }
 }
 
+
+
+
+
+
+
+
+
+
+
 // Free all memory associated with a t_general node
 void free_general_node(t_general *node) {
     if (node) {

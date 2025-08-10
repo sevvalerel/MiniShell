@@ -121,7 +121,6 @@ void	built_in_helper_func(t_full *full, int i)
 		}
 	}
 	built_in_helper_func_2(full, i);
-	free_split(new);
 }
 
 void	check_cmd_built_in(t_general *pipe_blocs, t_env **node, t_pipe *pipe, t_now *get)

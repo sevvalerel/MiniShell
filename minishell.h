@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
+/*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:05:46 by bucolak           #+#    #+#             */
-/*   Updated: 2025/08/09 15:49:29 by bucolak          ###   ########.fr       */
+/*   Updated: 2025/08/10 08:39:33 by seerel           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -165,9 +165,13 @@ void					renew_block2(t_general *list);
 void	handle_input(t_general *list, int i);
 void	handle_output(t_general *list, int i);
 void	handle_append(t_general *list, int i);
+void	free_old_args_heredoc(t_arg **old_arg);
+void	remove_heredoc(t_general *list);
 
 // redirection_second.c
 void					handle_heredoc(t_general *list);
+void	fill_new_args(t_arg **args, t_arg ***new_arg);
+int	count_arg(t_arg **args);
 
 // echo_first.c
 void	echo_flag_4_second(char *str, t_general *tmp, int *j);
@@ -191,12 +195,19 @@ void					unset_cmd_helper_func(t_env *node, t_env *pre_node,
 void					unset_cmd(t_general *list, t_env **env);
 
 void					handle_signal(int signo);
-void					remove_heredoc(t_general *list);
+
 
 //free.c
 void free_env(t_env *env);
 void free_pipe_blocks(t_general *blocks);
 void free_pipe(t_pipe *pipe);
 void free_envp(t_now *get);
+
+void	close_if_open(int fd);
+void	exit_with_error(t_general *list, int code);
+void	check_file_permissions(char *file, t_general *list);
+void	open_outfile(char *file, int *fd, t_general *list);
+int		open_infile(t_general *list, char *filename);
+
 
 #endif

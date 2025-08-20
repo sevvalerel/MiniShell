@@ -6,14 +6,15 @@
 /*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 16:13:46 by bucolak           #+#    #+#             */
-/*   Updated: 2025/08/02 01:12:38 by buket            ###   ########.fr       */
+/*   Updated: 2025/08/14 23:30:08 by buket            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-void	exit_cont(t_general *list, int a, t_env *env, t_now *get)
+void	exit_cont(t_full *full, t_general *list)
 {
+	int a;
 	int exit_code;
 	if (is_numeric(list->acces_args->args[1]->str))
 	{
@@ -27,26 +28,25 @@ void	exit_cont(t_general *list, int a, t_env *env, t_now *get)
 		list->dqm = a;
 		printf("exit\n");
 		exit_code = list->dqm;
-		free_pipe_blocks(list);
-		free_env(env);
+		cleanup(full);
+		free_pipe_blocks(full->pipe_blocks);
 		exit(exit_code);
 	}
 	else
 	{
 		//ft_putstr_fd("exit\n");
 		ft_putstr_fd("bash: exit: ", 2);
-		ft_putstr_fd(list->acces_args->args[1]->str, 2);
+		ft_putstr_fd(full->pipe_blocks->acces_args->args[1]->str, 2);
 		ft_putstr_fd(": numeric argument required\n", 2);
 		list->dqm = 2;
 		exit_code = list->dqm;
-		free_env(env);
-		free_envp(get);
-		free_pipe_blocks(list);
+		cleanup(full);
+		free_pipe_blocks(full->pipe_blocks);
 		exit(exit_code);
 	}
 }
 
-void	exit_cmd(t_general *list, t_env *env, t_pipe *pipe, t_now *get)
+void	exit_cmd(t_full *full, t_general *list)
 {
 	int	exit_code;
 	if (list->acces_args->args[1] && list->acces_args->args[2])
@@ -59,20 +59,15 @@ void	exit_cmd(t_general *list, t_env *env, t_pipe *pipe, t_now *get)
 	{
 		if (list->acces_args->args[1])
 		{
-			exit_cont(list, 0, env, get);
+			exit_cont(full, list);
 		}
 		else
 		{
 			printf("exit\n");
-			list->dqm = 0;
 			exit_code = list->dqm;
-			if(list->heredoc_fd != -1)
-				close(list->heredoc_fd);
-			free_env(env);
-			free_envp(get);
-			if(pipe)
-				free_pipe(pipe);
-			free_pipe_blocks(list);
+			cleanup(full);
+			if(full->pipe_blocks)
+				free_pipe_blocks(full->pipe_blocks);
 			exit(exit_code);
 		}
 	}

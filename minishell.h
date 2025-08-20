@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
+/*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:05:46 by bucolak           #+#    #+#             */
-/*   Updated: 2025/08/10 08:39:33 by seerel           ###   ########.fr       */
+/*   Updated: 2025/08/19 17:18:46 by bucolak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ typedef struct s_env
 {
 	char				*data;
 	char				*key;
+	int f;
 	struct s_env		*next;
 	int has_equal;
 }						t_env;
@@ -71,8 +72,10 @@ typedef struct s_general
 	char				*blocs;
 	char				**limiter;
 	t_pipeafter			*acces_args;
+	int a;
 	struct s_general	*next;
 	int					heredoc_fd;
+	int flag_heredoc;
 }						t_general;
 
 typedef struct s_now
@@ -94,7 +97,16 @@ typedef struct s_full
 	t_env *node;
 	t_pipe *pipe;
 	t_now *get;
+	char **new;
 }	t_full;
+
+void signal_handler_heredoc(int signo);
+void close_heredoc_fd(t_general *list);
+void cleanup(t_full *full);
+void control_redireciton(t_general *list, t_env *env);
+int is_flag_6(t_general *list, t_env *env);
+int	has_redireciton(t_general *pipe_blocks);
+char	*ft_strstr(const char *haystack, const char *needle);
 void remove_env_var(t_env **env, char *var_name);
 void	signal_handler(void);
 void	print_pipes(t_general *pipe_block);
@@ -113,11 +125,11 @@ void	parse_input(t_general *a);
 int has_heredoc(t_general *list);
 
 // execute.c
-void	check_cmd_sys_call(t_general *pipe_blocs, t_env **env, t_now *get, t_pipe *pipe,t_full *full);
+void	check_cmd_sys_call(t_general *pipe_blocs, t_env *env, t_now *get, t_pipe *pipe,t_full *full);
 int						is_built_in(char *str);
-void					fill_env(t_env **env, t_now *get);
-void	handle_pipe(t_general *list, t_now *get, t_env **env, t_pipe *pipe, t_full *full);
-void					handle_redirections(t_general *pipe_blocs);
+void					fill_env(t_env *env, t_now *get);
+void	handle_pipe(t_general *list, t_now *get, t_env *env, t_pipe *pipe, t_full *full);
+void					handle_redirections(t_general *pipe_blocs, t_full *full);
 void	execute_command(t_general *pipe_blocs, t_now *get, t_pipe *pipe, t_env *envv, t_full *full);
 // cmd_built_in.c
 void	check_cmd_built_in(t_general *pipe_blocs, t_env **node, t_pipe *pipe, t_now *get);
@@ -127,8 +139,8 @@ void	pwd_cmd(char **ar, t_general *list, t_env *env);
 // environment_first.c
 void					get_env_helper_func(int *i, int *j, t_env *tmp,
 							char **envp);
-void					get_env(t_env **node, char **envp);
-void					print_env(t_general *list, t_env **node, int i);
+void					get_env(t_env *node, char **envp);
+void					print_env(t_general *list, t_env *node, int i);
 void					ft_envadd_back(t_env **lst, char *key, char *data,
 							t_general *list);
 void					create_env(t_general *list, t_env **env);
@@ -136,10 +148,11 @@ void					create_env(t_general *list, t_env **env);
 // environment_second.c
 char	*get_key(char *str);
 char					*get_data(char *str);
-void					print_export_env(t_env **env, t_general *list);
-void					export_cmd_helper_func(t_env **env, t_env **new_env,
+void					print_export_env(t_env *env, t_general *list);
+void					export_cmd_helper_func(t_env *env, t_env *
+	*new_env,
 							t_env *swap, int *j);
-t_env					**export_cmd(t_env **env);
+t_env					**export_cmd(t_env *env);
 
 //count_quote.c
 int						count_squote(char *str);
@@ -154,24 +167,20 @@ int						ft_lsttsize(t_env *lst);
 int						ft_strcmp(const char *s1, const char *s2);
 t_env					*ft_lsttlast(t_env *lst);
 int						is_numeric(char *str);
-int						is_repeated(t_env **node, char *ky, char *dt);
+int						is_repeated(t_env *node, char *ky, char *dt);
 
 // redirection_first.c
-int						is_redireciton(char *str);
+int	is_redireciton(char *str);
 void					renew_block2(t_general *list);
 void					renew_else_block(t_arg ***new, t_general *tmp, int *i,
 							int *j);
 void					renew_block2(t_general *list);
-void	handle_input(t_general *list, int i);
-void	handle_output(t_general *list, int i);
-void	handle_append(t_general *list, int i);
-void	free_old_args_heredoc(t_arg **old_arg);
-void	remove_heredoc(t_general *list);
+void	handle_input(t_general *list, int i, t_full *full );
+void	handle_output(t_general *list, int i, t_full *full);
+void	handle_append(t_general *list, int i, t_full *full);
 
 // redirection_second.c
-void					handle_heredoc(t_general *list);
-void	fill_new_args(t_arg **args, t_arg ***new_arg);
-int	count_arg(t_arg **args);
+void					handle_heredoc(t_general *list, t_full *full);
 
 // echo_first.c
 void	echo_flag_4_second(char *str, t_general *tmp, int *j);
@@ -180,14 +189,14 @@ void	initalized_echo(t_general *list);
 
 // echo_second.c
 void					echo_flag_0_and_2_second(char *str,
-							t_general *tmp, int *j);
+							t_general *tmp, int *j, int i);
 void					echo_flag_0_and_2(char *str, t_general *tmp,
 							int i);
 void					echo_flag_1(t_general *tmp, int i);
 
 // exit.c
 
-void	exit_cmd(t_general *list, t_env *env, t_pipe *pipe, t_now *get);
+void	exit_cmd(t_full *full, t_general *list);
 
 // unset.c
 void					unset_cmd_helper_func(t_env *node, t_env *pre_node,
@@ -195,19 +204,12 @@ void					unset_cmd_helper_func(t_env *node, t_env *pre_node,
 void					unset_cmd(t_general *list, t_env **env);
 
 void					handle_signal(int signo);
-
+void					remove_heredoc(t_general *list);
 
 //free.c
 void free_env(t_env *env);
 void free_pipe_blocks(t_general *blocks);
 void free_pipe(t_pipe *pipe);
 void free_envp(t_now *get);
-
-void	close_if_open(int fd);
-void	exit_with_error(t_general *list, int code);
-void	check_file_permissions(char *file, t_general *list);
-void	open_outfile(char *file, int *fd, t_general *list);
-int		open_infile(t_general *list, char *filename);
-
 
 #endif

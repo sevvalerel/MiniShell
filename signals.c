@@ -6,19 +6,19 @@
 /*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/17 16:16:35 by bucolak           #+#    #+#             */
-/*   Updated: 2025/08/07 15:42:23 by buket            ###   ########.fr       */
+/*   Updated: 2025/08/20 14:27:19 by buket            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-void	handle_signal(int signo)
-{
-    if(signo == SIGINT)
-    {
-        write(1, "\n", 1);
-        rl_on_new_line();
-        rl_replace_line("", 0);  // Bu satırı mutlaka uncomment edin!
-        rl_redisplay();
-    }
-}
+// void	handle_signal(int signo)
+// {
+//     if(signo == SIGINT)
+//     {
+//         write(1, "\n", 1);
+//         rl_on_new_line();
+//         rl_replace_line("", 0);
+//         rl_redisplay();
+//     }
+// }

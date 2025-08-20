@@ -6,7 +6,7 @@
 /*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 15:29:26 by bucolak           #+#    #+#             */
-/*   Updated: 2025/08/09 20:36:37 by bucolak          ###   ########.fr       */
+/*   Updated: 2025/08/19 17:15:51 by bucolak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ t_arg *create_arg(char *str, int flag, int type)
         return NULL;
     }
     arg->flag = flag;
+    arg->env_flag = 0;
     arg->s = 1;
     return arg;
 }
@@ -77,7 +78,9 @@ t_general *create_general_node(int dqm)
         return NULL;
     }
     node->acces_args->args=NULL;
+    node->flag_heredoc = 0;
     node->heredoc_fd = -1;
+    node->a = 0;
     node->blocs = NULL;
     node->limiter = NULL;
     node->next = NULL;

@@ -6,7 +6,7 @@
 /*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/20 17:12:55 by bucolak           #+#    #+#             */
-/*   Updated: 2025/08/09 19:04:29 by bucolak          ###   ########.fr       */
+/*   Updated: 2025/08/13 17:08:50 by bucolak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,27 +131,30 @@ void	parse_input(t_general *a)
 				tmp_str = ft_substr(a->blocs, i, len);
 				a->acces_args->args[k] = create_arg(tmp_str,5, 0);
 				free(tmp_str);
+				i += len;
 				if(a->blocs[i] == '\'' || a->blocs[i] == '"')
 				{
 					a->acces_args->args[k]->s = 0;
 				}
 				k++;
-				i += len;
 				continue ;
 			}
 			else if (a->blocs[i] == '"')
 			{
 				j = ++i;
 				while (a->blocs[i] && a->blocs[i] != '"')
-					i++;
+				i++;
 				if (a->blocs[i] == '"'  )
 				{
 					tmp_str = ft_substr(a->blocs, j, i- j);
-					if(!tmp_str[0] && (a->blocs[i+1] == ' ' || !a->blocs[i+1]))
+					if(!tmp_str[0] )//BAK:  && (a->blocs[i+1] == ' ' || !a->blocs[i+1]) bu kontrol vardı sildim
 					{
 						free(tmp_str);
 						tmp_str = ft_substr(a->blocs, j-1, 2);
 						a->acces_args->args[k] = create_arg(tmp_str, 0, 0);
+						free(tmp_str);
+						if(a->blocs[i+1] && a->blocs[i+1] != ' ')
+							a->acces_args->args[k]->s = 0;
 						k++;
 					}
 					else
@@ -164,8 +167,6 @@ void	parse_input(t_general *a)
 						}
 						k++;
 					}
-					// else
-					// 	free(tmp_str);
 					i++;
 				}
 				else
@@ -269,7 +270,6 @@ void	parse_input(t_general *a)
 				{
 					i++;
 				}
-					
 				if(!a->blocs[i-1] && ((a->blocs[i] == '"' && a->blocs[i+1] == '"') ||(a->blocs[i] == '\'' && a->blocs[i+1] == '\'')))
 				{
 					i+=2;

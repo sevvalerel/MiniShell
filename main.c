@@ -3,14 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:22:33 by bucolak           #+#    #+#             */
-/*   Updated: 2025/08/09 21:17:32 by bucolak          ###   ########.fr       */
+/*   Updated: 2025/08/20 19:55:48 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
+
+volatile int signal_ec = 0;
 
 int	is_in_quotes(const char *line, int pos)
 {
@@ -112,10 +114,10 @@ int	has_redireciton(t_general *pipe_blocks)
 	i = 0;
 	while (pipe_blocks->acces_args->args[i])
 	{
-		if (ft_strcmp(pipe_blocks->acces_args->args[i]->str, "<") == 0
+		if ((ft_strcmp(pipe_blocks->acces_args->args[i]->str, "<") == 0
 			|| ft_strcmp(pipe_blocks->acces_args->args[i]->str, "<<") == 0
 			|| ft_strcmp(pipe_blocks->acces_args->args[i]->str, ">") == 0
-			|| ft_strcmp(pipe_blocks->acces_args->args[i]->str, ">>") == 0)
+			|| ft_strcmp(pipe_blocks->acces_args->args[i]->str, ">>") == 0) && (pipe_blocks->acces_args->args[i]->flag == 5))
 			return (1);
 		i++;
 	}
@@ -138,7 +140,7 @@ int has_heredoc(t_general *list)
 	while (list->acces_args->args[i])
 	{
 		if (list->acces_args->args[i]->str && 
-			ft_strcmp(list->acces_args->args[i]->str, "<<") == 0 && i!=0)
+			ft_strcmp(list->acces_args->args[i]->str, "<<") == 0 && (list->acces_args->args[i]->flag == 2 || list->acces_args->args[i]->flag == 5))
 			return 1;
 		i++;
 	}
@@ -175,6 +177,37 @@ void	create_pipe(int count, int **fd)
 	}
 }
 
+
+int is_flag_6(t_general *list, t_env *env)
+{
+	t_env *tenv;
+	int i;
+	t_general *tmp;
+	tmp = list;
+	while(tmp)
+	{
+		i = 0;
+		while(tmp->acces_args->args[i])
+		{
+			tenv = env;
+			if(is_redireciton(tmp->acces_args->args[i]->str) == 1 && (tmp->acces_args->args[i]->flag ==5 || tmp->acces_args->args[i]->flag == 2))
+			{
+				while(tenv)
+				{
+					if(ft_strcmp(tenv->data, tmp->acces_args->args[i]->str) == 0  && tenv->f==3)
+					{
+						return 1;
+					}
+					tenv = tenv->next;
+				}
+			}
+			i++;
+		}
+		tmp = tmp->next;
+	}
+	return 0;
+}
+
 int count_m(t_general *tmp, int i, t_env *env)
 {
 	int j;
@@ -185,24 +218,46 @@ int count_m(t_general *tmp, int i, t_env *env)
 	
 	c = 0;
 	j = 0;
+	if(!tmp->acces_args->args[i]->str || !tmp->acces_args->args[i]->str[0])
+		return 0;
 	while(tmp->acces_args->args[i]->str[j])
 	{
-		if(tmp->acces_args->args[i]->str[j] == '$' && 
-            tmp->acces_args->args[i]->str[j+1] && 
-            tmp->acces_args->args[i]->str[j+1] != '?' && 
-            tmp->acces_args->args[i]->flag != 1 &&
+		if(tmp->acces_args->args[i]->str[j] == '$' &&
+			tmp->acces_args->args[i]->str[j+1] != '\0' &&
+			tmp->acces_args->args[i]->str[j+1] != '?' &&
+			tmp->acces_args->args[i]->flag != 1 &&
 			tmp->acces_args->args[i]->str[j+1] != ' ')
 			{
 				j++;
+				c++;
 				start = j;
-				while(tmp->acces_args->args[i]->str[j] && tmp->acces_args->args[i]->str[j] != ' ' && tmp->acces_args->args[i]->str[j] != '$')
+				while(tmp->acces_args->args[i]->str[j] && 
+					(ft_isalnum(tmp->acces_args->args[i]->str[j]) || 
+					 tmp->acces_args->args[i]->str[j] == '_'))
+				{
 					j++;
-				a =ft_substr(tmp->acces_args->args[i]->str, start, j-start);
-				if(a)
-					str = get_getenv(env, a);
-				if(str)
-					c += ft_strlen(str);
-				free(a);
+				}
+				if(j>start)
+				{
+					a =ft_substr(tmp->acces_args->args[i]->str, start, j-start);
+					if (a && tmp->acces_args->args[i]->flag != 1 && tmp->acces_args->args[i]->flag != 6)
+					{
+					    str = get_getenv(env, a);
+						if (str && str[0]) 
+						{	
+							c += ft_strlen(str);
+						}
+						else if(!str)
+						{
+							if(tmp->acces_args->args[i]->flag==0)
+							{
+								c+= ft_strlen(tmp->acces_args->args[i]->str);
+							}
+						}
+					}
+					free(a);
+				}
+				continue;
 			}
 			else
 				c++;
@@ -225,8 +280,8 @@ void expand_dolar(t_general *list, t_env *env)
 	int j;
 	int k;
 	int flag;
-
-	flag = 0;
+	
+	(void)flag;
 	tmp = list;
 	while(tmp)
 	{
@@ -234,23 +289,14 @@ void expand_dolar(t_general *list, t_env *env)
 		while(tmp->acces_args->args[i])
 		{
 			j = 0;
-			if((ft_strcmp(tmp->acces_args->args[i]->str, "$empty") == 0 || ft_strcmp(tmp->acces_args->args[i]->str, "$EMPTY") == 0) && tmp->acces_args->args[i]->flag == 2)
+			if(i>0 && tmp->acces_args->args[i-1] && ft_strcmp(tmp->acces_args->args[i-1]->str, "<<") == 0 && (tmp->acces_args->args[i-1]->flag == 5 || tmp->acces_args->args[i-1]->flag == 2))
 			{
-				// Argümanı sil
-				free(tmp->acces_args->args[i]->str);
-				free(tmp->acces_args->args[i]);
-				// Argümanları kaydır
-				l = i;
-				while(tmp->acces_args->args[l + 1]) 
-				{
-					tmp->acces_args->args[l] = tmp->acces_args->args[l+1];
-					l++;
-				}
-				tmp->acces_args->args[l] = NULL;
-				// i'yi arttırma, çünkü kaydırma yaptık
+				i++;
 				continue;
 			}
 			new= malloc(sizeof(char) * (count_m(tmp, i, env) +1));
+			if(!new)
+				return ;
 			k = 0;
 			while(tmp->acces_args->args[i]->str[j])
 			{
@@ -262,26 +308,35 @@ void expand_dolar(t_general *list, t_env *env)
 				{
 					j++;
 					start = j;
-					while(tmp->acces_args->args[i]->str[j] && tmp->acces_args->args[i]->str[j] != ' ' && tmp->acces_args->args[i]->str[j] != '$')
+					while(tmp->acces_args->args[i]->str[j] && 
+						(ft_isalnum(tmp->acces_args->args[i]->str[j]) || 
+						 tmp->acces_args->args[i]->str[j] == '_'))
+				  	{
 						j++;
-					a =ft_substr(tmp->acces_args->args[i]->str, start, j-start);
-					if (a && tmp->acces_args->args[i]->flag != 1)
+				  	}
+					if(j>start)
 					{
-					    flag = 1;
-					    str = get_getenv(env, a);
+						a =ft_substr(tmp->acces_args->args[i]->str, start, j-start);
+						if (a && tmp->acces_args->args[i]->flag != 1 && tmp->acces_args->args[i]->flag != 6)
+						{
+						    str = get_getenv(env, a);
+							if (str && str[0]) 
+							{	
+							    ft_memcpy(new + k, str, ft_strlen(str));
+							    k += ft_strlen(str);
+							}
+							else if(!str)
+							{
+								if(tmp->acces_args->args[i]->flag==0)
+								{
+									ft_memcpy(new + k, tmp->acces_args->args[i]->str, ft_strlen(tmp->acces_args->args[i]->str));
+									k+= ft_strlen(tmp->acces_args->args[i]->str);
+								}
+							}
+						}
+						if(a)
+                    		free(a);
 					}
-					if (str && str[0] != '\0' && flag == 1) 
-					{	
-					    ft_memcpy(new + k, str, ft_strlen(str));
-					    k += ft_strlen(str);
-					}
-					else
-					{
-						ft_memcpy(new + k, tmp->acces_args->args[i]->str, ft_strlen(tmp->acces_args->args[i]->str));
-						k+= ft_strlen(tmp->acces_args->args[i]->str);
-					}
-					if(a)
-                    	free(a);
 				}
 				else
 				{
@@ -324,7 +379,7 @@ char *get_getenv(t_env *env, char *key)
 	tmp = env;
 	while(tmp)
 	{
-		if(ft_strncmp(key, tmp->key, ft_strlen(key)) == 0)
+		if(ft_strcmp(key, tmp->key) == 0)
 			return tmp->data;
 		tmp = tmp->next;
 	}
@@ -346,18 +401,32 @@ void connect_count_malloc(t_general *list)
 		i = 0;
 		while(tmp->acces_args->args[i])
 		{
-			if(tmp->acces_args->args[i]->s == 0 && tmp->acces_args->args[i+1])
+			if(tmp->acces_args->args[i]->s == 0 && tmp->acces_args->args[i+1] && ft_strcmp(tmp->acces_args->args[i]->str, "''")!=0 && ft_strcmp(tmp->acces_args->args[i]->str, "\"\"")!=0)
 			{
+				if(is_redireciton(tmp->acces_args->args[i]->str) == 1 && tmp->acces_args->args[i]->flag!=0 && tmp->acces_args->args[i]->flag!=1 &&  is_redireciton(tmp->acces_args->args[i+1]->str) == 0 && (tmp->acces_args->args[i+1]->flag==0 || tmp->acces_args->args[i+1]->flag==1))
+				{
+					i++;
+					continue;
+				}
+					
 				c = ft_strlen(tmp->acces_args->args[i]->str) + ft_strlen(tmp->acces_args->args[i+1]->str);
 				new = malloc(sizeof(char) * (c+1));
 				ft_strlcpy(new, tmp->acces_args->args[i]->str, c+1);
                 ft_strlcat(new, tmp->acces_args->args[i+1]->str,c+1);
+				if((ft_strcmp(new, "<<") == 0 || ft_strcmp(new, ">>") == 0) &&  ((tmp->acces_args->args[i]->flag != 5 && tmp->acces_args->args[i]->flag != 2 ) || (tmp->acces_args->args[i+1]->flag != 5 && tmp->acces_args->args[i+1]->flag != 2 )))
+				{
+					tmp->acces_args->args[i]->flag = 0;
+				}
+				if(tmp->acces_args->args[i+1] &&is_redireciton(tmp->acces_args->args[i+1]->str) == 1 && tmp->acces_args->args[i+1]->flag !=5 && tmp->acces_args->args[i+1]->s == 0)
+				{
+					tmp->acces_args->args[i]->flag = 6;
+				}
+				tmp->acces_args->args[i]->s = tmp->acces_args->args[i+1]->s;
 				free(tmp->acces_args->args[i+1]->str);
 				free(tmp->acces_args->args[i+1]);
 				
 				free(tmp->acces_args->args[i]->str);
 				tmp->acces_args->args[i]->str = new;
-				tmp->acces_args->args[i]->s = 1;
 				j = i+1;
 				while(tmp->acces_args->args[j])
 				{
@@ -373,6 +442,125 @@ void connect_count_malloc(t_general *list)
 	}	
 }
  
+int count_remove_null(char *str)
+{
+	int c;	
+	int j;
+
+	c = 0;
+	j = 0;
+	while(str[j])
+	{
+		if((str[j] == '"' && str[j+1] && str[j+1] == '"' && ((j>0 && str[j-1]) || str[j+2])) || (str[j] == '\'' && str[j+1] && str[j+1] == '\'' && ((j>0 && str[j-1]) || str[j+2])))
+		{
+			j+=2;
+		}
+		else
+		{
+			c++;
+			j++;
+		}
+	}
+	return c+1;
+}
+
+void remove_null(t_general *list)
+{
+	t_general *tmp;
+	tmp = list;	
+	char *str;
+	char *new;	//    echo "" "" hi
+	int i = 0;
+	int j;
+	int k;
+	while(tmp)	
+	{
+		i = 0;
+		while(tmp->acces_args->args[i])
+		{
+			j = 0;
+			k = 0;
+			str = tmp->acces_args->args[i]->str;
+			new =malloc(sizeof(char) * count_remove_null(str));
+			if(!new)
+				return ;
+			while(tmp->acces_args->args[i]->str[j])
+			{
+				if(((str[j] == '"' && str[j+1] && str[j+1] == '"' && ((j>0 && str[j-1]) || str[j+2]))) || ((str[j] == '\'' && str[j+1] && str[j+1] == '\'' && ((j>0 && str[j-1]) || str[j+2]))))
+				{
+					j+=2;
+				}
+				else
+				{
+					new[k++] = str[j++];
+				}
+			}
+			new[k] = '\0';
+			if(tmp->acces_args->args[i]->str)
+				free(tmp->acces_args->args[i]->str);
+			tmp->acces_args->args[i]->str = new;
+			i++;
+		}
+		tmp = tmp->next;
+	}
+}
+
+void control_redireciton(t_general *list, t_env *env)
+{
+	t_general *tmp;
+	char *str;
+	str = NULL;
+	t_env *tenv;
+	int i;
+	int j;
+	tmp = list;
+	while(tmp)
+	{
+		i = 0;
+		while(tmp->acces_args->args[i])
+		{
+			if(tmp->acces_args->args[i]->flag == 6)
+			{
+				j = 0;
+				while(tmp->acces_args->args[i]->str[j])
+				{
+					if(tmp->acces_args->args[i]->str[j]=='=' && tmp->acces_args->args[i]->str[j+1])
+					{
+						j++;
+						str = tmp->acces_args->args[i]->str+j;
+						break;
+					}
+					j++;
+				}
+				tenv = env;
+				while(tenv)
+				{
+					if(ft_strncmp(str, tenv->key, ft_strlen(tenv->key)) == 0)
+					{
+						tenv->f = 3;
+						break;
+					}
+					tenv = tenv->next;
+				}
+			}
+			i++;
+		}
+		tmp = tmp->next;
+	}
+}
+
+void	handle_signal(int signo)
+{
+    if(signo == SIGINT)
+    {
+		signal_ec = 1;
+        write(1, "\n", 1);
+        rl_on_new_line();
+        rl_replace_line("", 0);
+        rl_redisplay();
+    }
+}
+
 int	main(int argc, char *argv[], char **envp)
 {
 	char		*line;
@@ -391,10 +579,15 @@ int	main(int argc, char *argv[], char **envp)
 	pipe = NULL;
 	pipe_blocs = NULL;
 	get = NULL;
+	full.get = NULL;
+	full.node = NULL;
+	full.pipe=NULL;
+	full.pipe_blocks = NULL;
+	full.new=NULL;
 	env = create_env_node();
 	if (first_run)
 	{
-		get_env(&env, envp);
+		get_env(env, envp);
 		full.node = env;
 		first_run = 0;
 	}
@@ -403,14 +596,14 @@ int	main(int argc, char *argv[], char **envp)
 		signal_handler();
 		pipe_blocs = create_general_node(last_dqm);
 		line = readline("Our_shell% ");
+		if(signal_ec == 1)
+		{
+			last_dqm = 130;
+			pipe_blocs->dqm = 130;
+			signal_ec = 0;
+		}
 		if (!line)
 		{
-			if (pipe_blocs)
-			{
-				exit_code = pipe_blocs->dqm;
-				free_pipe_blocks(pipe_blocs);
-				pipe_blocs = NULL;
-			}
 			if (get)
 			{
 				free_envp(get);
@@ -426,6 +619,15 @@ int	main(int argc, char *argv[], char **envp)
 				free_pipe(pipe);
 				pipe = NULL;
 			}
+			if(pipe_blocs->heredoc_fd!=-1)
+				close(pipe_blocs->heredoc_fd);
+			if (pipe_blocs)
+			{
+				exit_code = pipe_blocs->dqm;
+				free_pipe_blocks(pipe_blocs);
+				pipe_blocs = NULL;
+			}
+			exit_code=0;
 			exit(exit_code);
 		}
 		if (line[0] == '\0')
@@ -439,17 +641,15 @@ int	main(int argc, char *argv[], char **envp)
 		pipe_parse(&pipe_blocs, line);
 		parse_input(pipe_blocs);
 		expand_dolar(pipe_blocs, env);
-		//print_pipes(pipe_blocs);
 		connect_count_malloc(pipe_blocs);
+		remove_null(pipe_blocs);
+		control_redireciton(pipe_blocs, env);
+		//print_pipes(pipe_blocs);
 		full.pipe_blocks = pipe_blocs;
-		if(has_heredoc(pipe_blocs) == 1)
-		{
-			handle_heredoc(pipe_blocs);
-		}
 		get = malloc(sizeof(t_now));
 		get->envp = malloc(sizeof(char *) * (ft_lsttsize(env) + 1));
 		
-		fill_env(&env, get);
+		fill_env(env, get);
 		full.get = get;
 		if (pipe_blocs->next)
 		{
@@ -457,28 +657,29 @@ int	main(int argc, char *argv[], char **envp)
 			init_pipe(pipe, pipe_blocs);
 			create_pipe(pipe->count, pipe->fd);
 			full.pipe = pipe;
-			handle_pipe(pipe_blocs, get, &env, pipe,&full);
-			
+			handle_pipe(pipe_blocs, get, env, pipe,&full);
 			free_pipe(pipe);
             pipe = NULL;
 		}
 		else if (pipe_blocs->acces_args && pipe_blocs->acces_args->args[0])
 		{
-			if ((!has_redireciton(pipe_blocs)
-			&& is_built_in(pipe_blocs->acces_args->args[0]->str)))
+			if (!has_redireciton(pipe_blocs) &&is_built_in(pipe_blocs->acces_args->args[0]->str))
 			{
 				check_cmd_built_in(pipe_blocs, &env, pipe, get);
 			}
 			else
 			{
-				check_cmd_sys_call(pipe_blocs, &env, get, pipe,&full);
+				check_cmd_sys_call(pipe_blocs, env, get, pipe,&full);
 			}
 		}
 		free_envp(get);
 		get = NULL;
+		// if(signal_ec == 1)
+		// {
+		// 	pipe_blocs->dqm = 130;
+		// 	signal_ec = 0;
+		// }
 		last_dqm = pipe_blocs->dqm;
-		if(pipe_blocs->heredoc_fd!=-1)
-			close(pipe_blocs->heredoc_fd);
 		free_pipe_blocks(pipe_blocs);
 		pipe_blocs = NULL;
 		free(line);

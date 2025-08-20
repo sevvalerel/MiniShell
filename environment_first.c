@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   environment_first.c                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
+/*   By: buket <buket@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/25 15:58:25 by buket             #+#    #+#             */
-/*   Updated: 2025/08/09 21:20:50 by bucolak          ###   ########.fr       */
+/*   Updated: 2025/08/15 00:22:57 by buket            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 void	get_env_helper_func(int *i, int *j, t_env *tmp, char **envp)
 {
-	(*i)++;
+	// (*i)++;
 	if (tmp->key)
 	{
 		free(tmp->key);
@@ -28,15 +28,17 @@ void	get_env_helper_func(int *i, int *j, t_env *tmp, char **envp)
 	{
 		tmp->key = ft_substr(envp[*j], 0, *i);
 		tmp->data = ft_strdup(envp[*j] + *i + 1);
+		tmp->has_equal = 1;
 	}
 	else
 	{
 		tmp->key = ft_substr(envp[*j], 0, *i);
 		tmp->data = NULL;
+		tmp->has_equal = 0;
 	}
 }
 
-void	get_env(t_env **node, char **envp)
+void	get_env(t_env *node, char **envp)
 {
 	static int	j;
 	int			i;
@@ -44,12 +46,15 @@ void	get_env(t_env **node, char **envp)
 
 	j = 0;
 	i = 0;
-	tmp = *node;
+	tmp = node;
 	while (envp[j])
 	{
 		i = 0;
-		while (envp[j][i] != '=')
-			get_env_helper_func(&i, &j, tmp, envp);
+		while (envp[j][i] && envp[j][i] != '=')
+		{
+			i++;
+		}
+		get_env_helper_func(&i, &j, tmp, envp);
 		j++;
 		if (envp[j])
 		{
@@ -59,28 +64,34 @@ void	get_env(t_env **node, char **envp)
 	}
 }
 
-void	print_env(t_general *list, t_env **node, int i)
+void	print_env(t_general *list, t_env *node, int i)
 {
 	t_env	*tmp;
 
 	if (list->acces_args->args[i + 1])
 	{
-		printf("Error\n");
+		ft_putstr_fd("env: '", 2);
+		ft_putstr_fd(list->acces_args->args[i + 1]->str,2);
+		ft_putstr_fd("’: No such file or directory\n", 2);
+		list->dqm = 127;
 		return ;
 	}
-	tmp = *node;
+	tmp = node;
 	while (tmp)
 	{
 		if (tmp->key && tmp->data)
 		{
-			// printf("flag: %d\n", tmp->has_equal);
 			if (tmp->data && tmp->data[0])
 			{
-				printf("%s=%s\n", tmp->key, tmp->data);
+				ft_putstr_fd(tmp->key, 1);
+				ft_putstr_fd("=", 1);
+				ft_putstr_fd(tmp->data, 1);
+				ft_putchar_fd('\n', 1);
 			}
 			else if(tmp->has_equal == 1)
 			{
-				printf("%s=\n", tmp->key);
+				ft_putstr_fd(tmp->key, 1);
+				ft_putstr_fd("=\n", 1);
 			}	
 		}
 		tmp = tmp->next;
@@ -120,10 +131,10 @@ void	ft_envadd_back(t_env **lst, char *key, char *data, t_general *list)
 	tmp = *lst;
     while (tmp)
     {
-        if (ft_strcmp(tmp->key, key) == 0)
+		if (ft_strcmp(tmp->key, key) == 0)
         {
-            if (tmp->data)
-                free(tmp->data);
+			if (tmp->data)
+			free(tmp->data);
             tmp->data = ft_strdup(data);
             list->dqm = 0;
             return;
@@ -141,6 +152,7 @@ void	ft_envadd_back(t_env **lst, char *key, char *data, t_general *list)
 				new_node->data = ft_strdup(data);			
 			else
 				new_node->data = ft_strdup("");
+
 			if (*lst == NULL)
 				*lst = new_node;
 			else
@@ -172,7 +184,17 @@ void create_env_2(t_general *list, t_env **env, int i)
 		if ((count_dquote(new) % 2 == 0 || count_squote(new)
 		% 2 == 0)) //burda is_repeat fonksiyonu vardı kaldırdım  çünkü şuan böyle gerekti sonra lazım olursa duruma göre bakarız
 				{
-					ft_envadd_back(env, key, data, list);
+					if(key && key[0])
+					{
+						ft_envadd_back(env, key, data, list);
+					}
+					else
+					{
+						ft_putstr_fd("bash: export: `", 2);
+						ft_putstr_fd(list->acces_args->args[1]->str,2);
+						ft_putstr_fd("': not a valid identifier\n", 2);
+						list->dqm = 1;
+					}
 				}
         free(key);
         free(data);

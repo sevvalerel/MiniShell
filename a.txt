@@ -1,51 +1,51 @@
-Makefile
-a.txt
-apply_malloc.c
-apply_malloc.o
-cleanup.c
-cmd_built_in.c
-cmd_built_in.o
-count_quote.c
-count_quote.o
-e.txt
-echo_first.c
-echo_first.o
-echo_second.c
-echo_second.o
-environment_first.c
-environment_first.o
-environment_second.c
-environment_second.o
-etc.c
-etc.o
-execute.c
-execute.o
-exit.c
-exit.o
-free.c
-free.o
-libft
-main.c
-main.o
-message.c
-message.o
-minishell
-minishell.h
-minishell_tester
-outfiles
-parser.c
-parser.o
-pipe.c
-pipe.o
-redirection_first.c
-redirection_first.o
-redirection_first_2.c
-redirection_first_2.o
-redirection_second.c
-redirection_second.o
-script.sh
-signals.c
-signals.o
-unset.c
-unset.o
-valgrind.supp
+Our_shell% echo "" "" a
+    a
+Our_shell% echo "" a
+  a
+Our_shell% ls ""
+'""'
+Our_shell% ""
+bash: "": command not found
+Our_shell% ''
+bash: '': command not found
+Our_shell% cat ""
+Our_shell% ls """"""""""""
+'""'  '""'  '""'  '""'	'""'  '""'
+Our_shell% """"""""""""""
+bash: "": command not found
+Our_shell% ''
+bash: '': command not found
+Our_shell% ls ''
+ls: cannot access "''": No such file or directory
+Our_shell% ls ""
+'""'
+
+
+
+Our_shell% > E
+//newline var
+Our_shell% < asdasd
+bash: asdasd: No such file or directory
+Our_shell% >> F
+//newline var
+Our_shell% 
+
+
+
+
+Our_shell% .
+execve
+: Permission denied
+
+Our_shell% ..
+execve
+: Permission denied
+
+Our_shell% . | .
+execve
+: Permission denied
+free(): double free detected in tcache 2
+execve
+: Permission denied
+free(): double free detected in tcache 2
+

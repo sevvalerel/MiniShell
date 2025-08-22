@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:22:33 by bucolak           #+#    #+#             */
-/*   Updated: 2025/08/20 19:55:48 by marvin           ###   ########.fr       */
+/*   Updated: 2025/08/22 20:22:00 by seerel           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-volatile int signal_ec = 0;
+int signal_ec = 0;
 
 int	is_in_quotes(const char *line, int pos)
 {
@@ -190,7 +190,7 @@ int is_flag_6(t_general *list, t_env *env)
 		while(tmp->acces_args->args[i])
 		{
 			tenv = env;
-			if(is_redireciton(tmp->acces_args->args[i]->str) == 1 && (tmp->acces_args->args[i]->flag ==5 || tmp->acces_args->args[i]->flag == 2))
+			if(is_redirection(tmp->acces_args->args[i]->str) == 1 && (tmp->acces_args->args[i]->flag ==5 || tmp->acces_args->args[i]->flag == 2))
 			{
 				while(tenv)
 				{
@@ -403,7 +403,7 @@ void connect_count_malloc(t_general *list)
 		{
 			if(tmp->acces_args->args[i]->s == 0 && tmp->acces_args->args[i+1] && ft_strcmp(tmp->acces_args->args[i]->str, "''")!=0 && ft_strcmp(tmp->acces_args->args[i]->str, "\"\"")!=0)
 			{
-				if(is_redireciton(tmp->acces_args->args[i]->str) == 1 && tmp->acces_args->args[i]->flag!=0 && tmp->acces_args->args[i]->flag!=1 &&  is_redireciton(tmp->acces_args->args[i+1]->str) == 0 && (tmp->acces_args->args[i+1]->flag==0 || tmp->acces_args->args[i+1]->flag==1))
+				if(is_redirection(tmp->acces_args->args[i]->str) == 1 && tmp->acces_args->args[i]->flag!=0 && tmp->acces_args->args[i]->flag!=1 &&  is_redirection(tmp->acces_args->args[i+1]->str) == 0 && (tmp->acces_args->args[i+1]->flag==0 || tmp->acces_args->args[i+1]->flag==1))
 				{
 					i++;
 					continue;
@@ -417,7 +417,7 @@ void connect_count_malloc(t_general *list)
 				{
 					tmp->acces_args->args[i]->flag = 0;
 				}
-				if(tmp->acces_args->args[i+1] &&is_redireciton(tmp->acces_args->args[i+1]->str) == 1 && tmp->acces_args->args[i+1]->flag !=5 && tmp->acces_args->args[i+1]->s == 0)
+				if(tmp->acces_args->args[i+1] &&is_redirection(tmp->acces_args->args[i+1]->str) == 1 && tmp->acces_args->args[i+1]->flag !=5 && tmp->acces_args->args[i+1]->s == 0)
 				{
 					tmp->acces_args->args[i]->flag = 6;
 				}
@@ -619,15 +619,17 @@ int	main(int argc, char *argv[], char **envp)
 				free_pipe(pipe);
 				pipe = NULL;
 			}
+			close_heredoc_fd(pipe_blocs);
 			if(pipe_blocs->heredoc_fd!=-1)
 				close(pipe_blocs->heredoc_fd);
+				
 			if (pipe_blocs)
 			{
 				exit_code = pipe_blocs->dqm;
 				free_pipe_blocks(pipe_blocs);
 				pipe_blocs = NULL;
 			}
-			exit_code=0;
+			close_all_open_fds();
 			exit(exit_code);
 		}
 		if (line[0] == '\0')
@@ -674,11 +676,6 @@ int	main(int argc, char *argv[], char **envp)
 		}
 		free_envp(get);
 		get = NULL;
-		// if(signal_ec == 1)
-		// {
-		// 	pipe_blocs->dqm = 130;
-		// 	signal_ec = 0;
-		// }
 		last_dqm = pipe_blocs->dqm;
 		free_pipe_blocks(pipe_blocs);
 		pipe_blocs = NULL;

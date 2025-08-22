@@ -16,7 +16,8 @@ SRC = main.c \
 	  pipe.c \
 	  signals.c \
 	  parser.c	\
-	  free.c
+	  free.c \
+	  redirection_third.c 
 
 CC = gcc 
 

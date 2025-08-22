@@ -105,3 +105,4 @@ echo "✓ Test files cleaned up"
 echo
 
 echo "=== Redirection Tests Completed ==="
+

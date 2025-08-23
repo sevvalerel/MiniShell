@@ -3,21 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   heredoc_third.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
+/*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/23 12:41:22 by seerel            #+#    #+#             */
-/*   Updated: 2025/08/23 13:10:02 by seerel           ###   ########.fr       */
+/*   Updated: 2025/08/23 13:27:22 by bucolak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
-
-typedef struct s_hdoc_state
-{
-	int		i;
-	int		j;
-	int		status;
-}			t_hdoc_state;
 
 static int	handle_syntax_error(void)
 {

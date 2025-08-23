@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   environment_first.c                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
+/*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/25 15:58:25 by buket             #+#    #+#             */
-/*   Updated: 2025/08/21 13:58:31 by bucolak          ###   ########.fr       */
+/*   Updated: 2025/08/23 14:30:50 by seerel           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -183,7 +183,7 @@ void create_env_2(t_general *list, t_env **env, int i)
 		key = get_key(new);
         data = get_data(new);
 		if ((count_dquote(new) % 2 == 0 || count_squote(new)
-		% 2 == 0)) //burda is_repeat fonksiyonu vardı kaldırdım  çünkü şuan böyle gerekti sonra lazım olursa duruma göre bakarız
+		% 2 == 0)) //burda is_repeat fonksiyonu vardı kaldırdım çünkü şuan böyle gerekti sonra lazım olursa duruma göre bakarız
 				{
 					if(key && key[0])
 					{

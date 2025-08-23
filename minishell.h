@@ -6,7 +6,7 @@
 /*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:05:46 by bucolak           #+#    #+#             */
-/*   Updated: 2025/08/23 14:40:21 by seerel           ###   ########.fr       */
+/*   Updated: 2025/08/23 16:12:49 by seerel           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -213,8 +213,10 @@ void					handle_heredoc(t_general *list, t_full *full);
 
 // echo_first.c
 void	echo_flag_4_second(char *str, t_general *tmp, int *j);
-void	echo_cmd(t_general *tmp, char *str, int i);
+void	echo_cmd(t_general *tmp,int i);
 void	initalized_echo(t_general *list);
+int	cont_n(char *str);
+
 
 // echo_second.c
 void					echo_flag_0_and_2_second(char *str,

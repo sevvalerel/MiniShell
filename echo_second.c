@@ -6,7 +6,7 @@
 /*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:24:36 by bucolak           #+#    #+#             */
-/*   Updated: 2025/08/22 20:08:35 by seerel           ###   ########.fr       */
+/*   Updated: 2025/08/23 16:24:12 by seerel           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,9 +29,8 @@ void	echo_flag_0_and_2_second(char *str, t_general *tmp, int *j, int i)
 		(*j)++;
 		start = *j;
 		while(str[*j] && (ft_isalnum(str[*j]) || str[*j] == '_'))
-		{
 			(*j)++;
-		}
+
 		if (start == *j)
     	{
     	    (*j)--;
@@ -40,9 +39,7 @@ void	echo_flag_0_and_2_second(char *str, t_general *tmp, int *j, int i)
     	}
 		new = ft_substr(str, start, (*j)-start);
 		if(!new)
-		{
 			ft_putchar_fd(' ', 1);
-		}
 		free(new);
 	}
 	else
@@ -53,9 +50,7 @@ void	echo_flag_0_and_2_second(char *str, t_general *tmp, int *j, int i)
 			(*j) += 2;
 		}
 		else if(str[*j] == '"' && str[*j+1] && str[*j+1] == '"' && !tmp->acces_args->args[i+1])
-		{
 			(*j) += 2;
-		}
 		else if(str[*j]!='"')
 		{
 			ft_putchar_fd(str[*j], 1);

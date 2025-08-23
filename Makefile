@@ -27,6 +27,7 @@ SRC = main.c \
 	  heredoc_second.c \
 	  heredoc_third.c \
 	  heredoc_fourth.c\
+	  echo_builtin.c
 
 CC = gcc 
 

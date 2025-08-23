@@ -6,7 +6,7 @@
 /*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:05:46 by bucolak           #+#    #+#             */
-/*   Updated: 2025/08/22 20:21:06 by seerel           ###   ########.fr       */
+/*   Updated: 2025/08/23 12:58:27 by seerel           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,10 +101,14 @@ typedef struct s_full
 }	t_full;
 
 extern int signal_ec;
-
+void	direct_and_close_fd(int count, int **fd, int i, int type);
+void	clean_and_exit(t_full *full, int ec);
+void	close_fd(int count, int **fd, int type, int i);
+void	end_block(int count, int i, int **fd);
+void	wait_child(t_pipe *pipe, t_general *list);
 void free_for_heredoc(t_full *full);
 void	close_all_open_fds(void);
-void signal_handler_heredoc(int signo);
+
 void close_heredoc_fd(t_general *list);
 void cleanup(t_full *full);
 void control_redireciton(t_general *list, t_env *env);
@@ -129,10 +133,10 @@ void	parse_input(t_general *a);
 int has_heredoc(t_general *list);
 
 // execute.c
-void	check_cmd_sys_call(t_general *pipe_blocs, t_env *env, t_now *get, t_pipe *pipe,t_full *full);
+void	check_cmd_sys_call(t_general *pipe_blocs, t_env *env, t_pipe *pipe,t_full *full);
 int						is_built_in(char *str);
 void					fill_env(t_env *env, t_now *get);
-void	handle_pipe(t_general *list, t_now *get, t_env *env, t_pipe *pipe, t_full *full);
+void	handle_pipe(t_general *list, t_env *env, t_pipe *pipe, t_full *full);
 void					handle_redirections(t_general *pipe_blocs, t_full *full);
 void	execute_command(t_general *pipe_blocs, t_now *get, t_env *envv,t_full *full);
 // cmd_built_in.c
@@ -184,7 +188,7 @@ void	handle_output(t_general *list, int i, t_full *full);
 void	handle_append(t_general *list, int i, t_full *full);
 
 // redirection_second.c
-void					handle_heredoc(t_general *list, t_full *full);
+
 
 // echo_first.c
 void	echo_flag_4_second(char *str, t_general *tmp, int *j);
@@ -208,12 +212,33 @@ void					unset_cmd_helper_func(t_env *node, t_env *pre_node,
 void					unset_cmd(t_general *list, t_env **env);
 
 void					handle_signal(int signo);
-void					remove_heredoc(t_general *list);
 
 //free.c
 void free_env(t_env *env);
 void free_pipe_blocks(t_general *blocks);
 void free_pipe(t_pipe *pipe);
 void free_envp(t_now *get);
+
+
+
+int	process_heredocs(t_general *tmp, t_full *full);
+
+//heredoc_third.c
+int	process_heredocs(t_general *tmp, t_full *full);
+
+
+//heredoc_fourth.c
+int	handle_heredoc_process(t_general *tmp, t_full *full, int *j, int *status);
+void					handle_heredoc(t_general *list, t_full *full);
+
+//heredoc.c
+void	remove_heredoc(t_general *list);
+
+
+//heredoc_second.c
+void	fill_limiter(t_general *list);
+void	free_heredoc(t_full *full);
+void signal_handler_heredoc(int signo);
+
 
 #endif

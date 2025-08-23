@@ -13,11 +13,15 @@ SRC = main.c \
 	  echo_second.c \
 	  exit.c \
 	  unset.c \
-	  pipe.c \
 	  signals.c \
 	  parser.c	\
 	  free.c \
-	  redirection_third.c 
+	  heredoc_fourth.c \
+	  pipe_first.c \
+	  pipe_second.c \
+	  heredoc_second.c \
+	  heredoc.c \
+	  heredoc_third.c
 
 CC = gcc 
 

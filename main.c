@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
+/*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:22:33 by bucolak           #+#    #+#             */
-/*   Updated: 2025/08/22 20:22:00 by seerel           ###   ########.fr       */
+/*   Updated: 2025/08/22 21:51:19 by bucolak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -659,7 +659,7 @@ int	main(int argc, char *argv[], char **envp)
 			init_pipe(pipe, pipe_blocs);
 			create_pipe(pipe->count, pipe->fd);
 			full.pipe = pipe;
-			handle_pipe(pipe_blocs, get, env, pipe,&full);
+			handle_pipe(pipe_blocs, env, pipe,&full);
 			free_pipe(pipe);
             pipe = NULL;
 		}
@@ -671,7 +671,7 @@ int	main(int argc, char *argv[], char **envp)
 			}
 			else
 			{
-				check_cmd_sys_call(pipe_blocs, env, get, pipe,&full);
+				check_cmd_sys_call(pipe_blocs, env, pipe,&full);
 			}
 		}
 		free_envp(get);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   echo_second.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
+/*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:24:36 by bucolak           #+#    #+#             */
-/*   Updated: 2025/08/24 14:13:48 by seerel           ###   ########.fr       */
+/*   Updated: 2025/08/24 14:21:24 by bucolak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ static void	handle_quotes_and_chars(char *str, t_general *tmp, int *j, int i)
 	}
 }
 
-void	echo_flag_0_and_2_second(char *str, t_general *tmp, int *j, int i)
+static void	echo_flag_0_and_2_second(char *str, t_general *tmp, int *j, int i)
 {
 	if (str[*j] == '$' && str[*j + 1])
 	{

@@ -1,5 +1,4 @@
 SRC = main.c \
-	  execute.c \
 	  cmd_built_in.c \
 	  environment_first.c \
 	  environment_second.c \
@@ -13,6 +12,7 @@ SRC = main.c \
 	  echo_second.c \
 	  exit.c \
 	  unset.c \
+	  signals.c \
 	  parser.c	\
 	  free_utils.c \
 	  free_pipe.c \
@@ -26,8 +26,13 @@ SRC = main.c \
 	  heredoc.c \
 	  heredoc_second.c \
 	  heredoc_third.c \
-	  heredoc_fourth.c\
-	  echo_builtin.c
+	  heredoc_fourth.c \
+	  fill_nowstruct.c \
+	  execute_handle_first.c \
+	  execute_handle_second.c \
+	  echo_builtin.c \
+	  create_env.c \
+	  environment_third.c
 
 CC = gcc 
 

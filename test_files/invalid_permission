@@ -2,7 +2,6 @@
 <
 >
 >>
-$HOME
 42_minishell_tester
 append.c
 append.o
@@ -44,6 +43,12 @@ execute_second.c
 execute_second.o
 exit.c
 exit.o
+expand_dolar.c
+expand_dolar.o
+expand_dolar_second.c
+expand_dolar_second.o
+expand_dolar_utils.c
+expand_dolar_utils.o
 export_ctrl.c
 export_ctrl.o
 fill_nowstruct.c
@@ -52,6 +57,10 @@ free_pipe.c
 free_pipe.o
 free_utils.c
 free_utils.o
+helper_function.c
+helper_function.o
+helper_function_second.c
+helper_function_second.o
 heredoc.c
 heredoc_fourth.c
 heredoc_fourth.o
@@ -99,7 +108,6 @@ valgrind.supp
 <
 >
 >>
-$HOME
 42_minishell_tester
 append.c
 append.o
@@ -141,6 +149,12 @@ execute_second.c
 execute_second.o
 exit.c
 exit.o
+expand_dolar.c
+expand_dolar.o
+expand_dolar_second.c
+expand_dolar_second.o
+expand_dolar_utils.c
+expand_dolar_utils.o
 export_ctrl.c
 export_ctrl.o
 fill_nowstruct.c
@@ -149,6 +163,10 @@ free_pipe.c
 free_pipe.o
 free_utils.c
 free_utils.o
+helper_function.c
+helper_function.o
+helper_function_second.c
+helper_function_second.o
 heredoc.c
 heredoc_fourth.c
 heredoc_fourth.o
@@ -196,7 +214,6 @@ valgrind.supp
 <
 >
 >>
-$HOME
 42_minishell_tester
 append.c
 append.o
@@ -238,6 +255,12 @@ execute_second.c
 execute_second.o
 exit.c
 exit.o
+expand_dolar.c
+expand_dolar.o
+expand_dolar_second.c
+expand_dolar_second.o
+expand_dolar_utils.c
+expand_dolar_utils.o
 export_ctrl.c
 export_ctrl.o
 fill_nowstruct.c
@@ -246,6 +269,10 @@ free_pipe.c
 free_pipe.o
 free_utils.c
 free_utils.o
+helper_function.c
+helper_function.o
+helper_function_second.c
+helper_function_second.o
 heredoc.c
 heredoc_fourth.c
 heredoc_fourth.o
@@ -293,7 +320,6 @@ valgrind.supp
 <
 >
 >>
-$HOME
 42_minishell_tester
 append.c
 append.o
@@ -335,6 +361,12 @@ execute_second.c
 execute_second.o
 exit.c
 exit.o
+expand_dolar.c
+expand_dolar.o
+expand_dolar_second.c
+expand_dolar_second.o
+expand_dolar_utils.c
+expand_dolar_utils.o
 export_ctrl.c
 export_ctrl.o
 fill_nowstruct.c
@@ -343,6 +375,10 @@ free_pipe.c
 free_pipe.o
 free_utils.c
 free_utils.o
+helper_function.c
+helper_function.o
+helper_function_second.c
+helper_function_second.o
 heredoc.c
 heredoc_fourth.c
 heredoc_fourth.o

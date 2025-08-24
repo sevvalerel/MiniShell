@@ -6,7 +6,7 @@
 /*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/24 14:45:21 by seerel            #+#    #+#             */
-/*   Updated: 2025/08/24 14:50:08 by seerel           ###   ########.fr       */
+/*   Updated: 2025/08/24 16:13:52 by seerel           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,211 +140,95 @@ void	create_pipe(int count, int **fd)
 	}
 }
 
-int	is_flag_6(t_general *list, t_env *env)
+static int check_env_flag(t_env *env, char *str)
 {
-	t_env		*tenv;
-	int			i;
-	t_general	*tmp;
+	while (env)
+	{
+		if (ft_strcmp(env->data, str) == 0 && env->f == 3)
+			return 1;
+		env = env->next;
+	}
+	return 0;
+}
 
-	tmp = list;
+int is_flag_6(t_general *list, t_env *env)
+{
+	int i;
+	t_general *tmp = list;
+
 	while (tmp)
 	{
 		i = 0;
 		while (tmp->acces_args->args[i])
 		{
-			tenv = env;
 			if (is_redirection(tmp->acces_args->args[i]->str) == 1
 				&& (tmp->acces_args->args[i]->flag == 5
 					|| tmp->acces_args->args[i]->flag == 2))
 			{
-				while (tenv)
-				{
-					if (ft_strcmp(tenv->data,
-							tmp->acces_args->args[i]->str) == 0 && tenv->f == 3)
-					{
-						return (1);
-					}
-					tenv = tenv->next;
-				}
+				if (check_env_flag(env, tmp->acces_args->args[i]->str))
+					return 1;
 			}
 			i++;
 		}
 		tmp = tmp->next;
 	}
-	return (0);
+	return 0;
 }
 
-int	count_m(t_general *tmp, int i, t_env *env)
-{
-	int		j;
-	int		c;
-	int		start;
-	char	*str;
-	char	*a;
 
-	c = 0;
-	j = 0;
-	if (!tmp->acces_args->args[i]->str || !tmp->acces_args->args[i]->str[0])
-		return (0);
-	while (tmp->acces_args->args[i]->str[j])
+static int get_var_len(char *str, int start, t_env *env, int flag)
+{
+	int len = 0;
+	int j = start;
+	char *var_name;
+	char *val;
+
+	while (str[j] && (ft_isalnum(str[j]) || str[j] == '_'))
+		j++;
+	var_name = ft_substr(str, start, j - start);
+	if (!var_name)
+		return 0;
+	if (flag != 1 && flag != 6)
 	{
-		if (tmp->acces_args->args[i]->str[j] == '$'
-			&& tmp->acces_args->args[i]->str[j + 1] != '\0'
-			&& tmp->acces_args->args[i]->str[j + 1] != '?'
-			&& tmp->acces_args->args[i]->flag != 1
-			&& tmp->acces_args->args[i]->str[j + 1] != ' ')
+		val = get_getenv(env, var_name);
+		if (val && val[0])
+			len = ft_strlen(val);
+		else if (!val && flag == 0)
+			len = ft_strlen(str);
+	}
+	free(var_name);
+	return len;
+}
+
+int count_m(t_general *tmp, int i, t_env *env)
+{
+	int j = 0, c = 0, start;
+	char *str = tmp->acces_args->args[i]->str;
+	int flag = tmp->acces_args->args[i]->flag;
+
+	if (!str || !str[0])
+		return 0;
+	while (str[j])
+	{
+		if (str[j] == '$' && str[j + 1] != '\0'
+			&& str[j + 1] != '?' && flag != 1
+			&& str[j + 1] != ' ')
 		{
 			j++;
 			c++;
 			start = j;
-			while (tmp->acces_args->args[i]->str[j]
-				&& (ft_isalnum(tmp->acces_args->args[i]->str[j])
-					|| tmp->acces_args->args[i]->str[j] == '_'))
-			{
+			while (str[j] && (ft_isalnum(str[j]) || str[j] == '_'))
 				j++;
-			}
 			if (j > start)
-			{
-				a = ft_substr(tmp->acces_args->args[i]->str, start, j - start);
-				if (a && tmp->acces_args->args[i]->flag != 1
-					&& tmp->acces_args->args[i]->flag != 6)
-				{
-					str = get_getenv(env, a);
-					if (str && str[0])
-					{
-						c += ft_strlen(str);
-					}
-					else if (!str)
-					{
-						if (tmp->acces_args->args[i]->flag == 0)
-						{
-							c += ft_strlen(tmp->acces_args->args[i]->str);
-						}
-					}
-				}
-				free(a);
-			}
-			continue ;
+				c += get_var_len(str, start, env, flag);
+			continue;
 		}
-		else
-			c++;
+		c++;
 		j++;
 	}
-	return (c);
+	return c;
 }
 
-void	expand_dolar(t_general *list, t_env *env)
-{
-	t_general	*tmp;
-	char		*new;
-	char		*str;
-	char		*a;
-	int			i;
-	int			start;
-	int			l;
-	int			j;
-	int			k;
-	int			flag;
-
-	new = NULL;
-	str = NULL;
-	(void)flag;
-	tmp = list;
-	while (tmp)
-	{
-		i = 0;
-		while (tmp->acces_args->args[i])
-		{
-			j = 0;
-			if (i > 0 && tmp->acces_args->args[i - 1]
-				&& ft_strcmp(tmp->acces_args->args[i - 1]->str, "<<") == 0
-				&& (tmp->acces_args->args[i - 1]->flag == 5
-					|| tmp->acces_args->args[i - 1]->flag == 2))
-			{
-				i++;
-				continue ;
-			}
-			new = malloc(sizeof(char) * (count_m(tmp, i, env) + 1));
-			if (!new)
-				return ;
-			k = 0;
-			while (tmp->acces_args->args[i]->str[j])
-			{
-				if (tmp->acces_args->args[i]->str[j] == '$'
-					&& tmp->acces_args->args[i]->str[j + 1]
-					&& tmp->acces_args->args[i]->str[j + 1] != '?'
-					&& tmp->acces_args->args[i]->flag != 1
-					&& tmp->acces_args->args[i]->str[j + 1] != ' ')
-				{
-					j++;
-					start = j;
-					while (tmp->acces_args->args[i]->str[j]
-						&& (ft_isalnum(tmp->acces_args->args[i]->str[j])
-							|| tmp->acces_args->args[i]->str[j] == '_'))
-					{
-						j++;
-					}
-					if (j > start)
-					{
-						a = ft_substr(tmp->acces_args->args[i]->str, start, j
-								- start);
-						if (a && tmp->acces_args->args[i]->flag != 1
-							&& tmp->acces_args->args[i]->flag != 6)
-						{
-							str = get_getenv(env, a);
-							if (str && str[0])
-							{
-								ft_memcpy(new + k, str, ft_strlen(str));
-								k += ft_strlen(str);
-							}
-							else if (!str)
-							{
-								if (tmp->acces_args->args[i]->flag == 0)
-								{
-									ft_memcpy(new + k,
-										tmp->acces_args->args[i]->str,
-										ft_strlen(tmp->acces_args->args[i]->str));
-									k
-										+= ft_strlen(tmp->acces_args->args[i]->str);
-								}
-							}
-						}
-						if (a)
-							free(a);
-					}
-				}
-				else
-				{
-					new[k++] = tmp->acces_args->args[i]->str[j];
-					j++;
-				}
-			}
-			new[k] = '\0';
-			if (tmp->acces_args->args[i] && tmp->acces_args->args[i]->str)
-			{
-				free(tmp->acces_args->args[i]->str);
-			}
-			tmp->acces_args->args[i]->str = new;
-			if (tmp->acces_args->args[i] && !tmp->acces_args->args[i]->str[0])
-			{
-				if (tmp->acces_args->args[i]->str)
-					free(tmp->acces_args->args[i]->str);
-				if (tmp->acces_args->args[i])
-					free(tmp->acces_args->args[i]);
-				l = i;
-				while (tmp->acces_args->args[l + 1])
-				{
-					tmp->acces_args->args[l] = tmp->acces_args->args[l + 1];
-					l++;
-				}
-				tmp->acces_args->args[l] = NULL;
-				continue ;
-			}
-			i++;
-		}
-		tmp = tmp->next;
-	}
-}
 
 char	*get_getenv(t_env *env, char *key)
 {

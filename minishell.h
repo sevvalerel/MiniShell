@@ -6,7 +6,7 @@
 /*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:05:46 by bucolak           #+#    #+#             */
-/*   Updated: 2025/08/24 14:53:15 by seerel           ###   ########.fr       */
+/*   Updated: 2025/08/24 16:55:35 by seerel           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,6 +178,8 @@ void	connect_count_malloc(t_general *list);
 void	remove_null(t_general *list);
 void	init_pipe(t_pipe *pipe, t_general *list);
 void	create_pipe(int count, int **fd);
+char	*get_getenv(t_env *env, char *key);
+int count_m(t_general *tmp, int i, t_env *env);
 
 // execute.c
 void					check_cmd_sys_call(t_general *pipe_blocs, t_env *env,
@@ -284,5 +286,16 @@ int						go_to_handle_heredoc(t_general *list, t_full *full);
 void					fill_limiter(t_general *list);
 void					free_heredoc(t_full *full);
 void					signal_handler_heredoc(int signo);
+
+
+int skip_expansion(t_general *node, int i);
+int		process_single_arg(t_general *node, int i, t_env *env);
+char	*expand_variables_in_string(t_arg *arg, t_env *env);
+int expanded_length(t_arg *arg, t_env *env);
+char	*build_expanded_string(t_arg *arg, t_env *env, char *new_str);
+int		is_expandable_variable(t_arg *arg, int pos);
+int		expand_variable_at_position(t_arg *arg, t_env *env, char *dest, int *pos);
+int		remove_empty_arg(t_general *node, int i);
+void expand_args_in_node(t_general *node, t_env *env);
 
 #endif

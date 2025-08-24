@@ -37,7 +37,11 @@ SRC = main.c \
 	  export_ctrl.c \
 	  cmd_builtin_scnd.c \
 	  helper_function.c \
-	  helper_function_second.c
+	  helper_function_second.c \
+	  expand_dolar.c \
+	  expand_dolar_second.c \
+	  expand_dolar_utils.c
+
 
 CC = gcc 
 

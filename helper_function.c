@@ -3,16 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   helper_function.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
+/*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/24 14:45:21 by seerel            #+#    #+#             */
-/*   Updated: 2025/08/24 16:13:52 by seerel           ###   ########.fr       */
+/*   Updated: 2025/08/24 17:18:14 by bucolak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
-
-int		signal_ec = 0;
 
 int	is_in_quotes(const char *line, int pos)
 {
@@ -140,41 +138,39 @@ void	create_pipe(int count, int **fd)
 	}
 }
 
-static int check_env_flag(t_env *env, char *str)
+int	is_flag_6(t_general *list, t_env *env)
 {
-	while (env)
-	{
-		if (ft_strcmp(env->data, str) == 0 && env->f == 3)
-			return 1;
-		env = env->next;
-	}
-	return 0;
-}
+	t_env		*tenv;
+	int			i;
+	t_general	*tmp;
 
-int is_flag_6(t_general *list, t_env *env)
-{
-	int i;
-	t_general *tmp = list;
-
+	tmp = list;
 	while (tmp)
 	{
 		i = 0;
 		while (tmp->acces_args->args[i])
 		{
+			tenv = env;
 			if (is_redirection(tmp->acces_args->args[i]->str) == 1
 				&& (tmp->acces_args->args[i]->flag == 5
 					|| tmp->acces_args->args[i]->flag == 2))
 			{
-				if (check_env_flag(env, tmp->acces_args->args[i]->str))
-					return 1;
+				while (tenv)
+				{
+					if (ft_strcmp(tenv->data,
+							tmp->acces_args->args[i]->str) == 0 && tenv->f == 3)
+					{
+						return (1);
+					}
+					tenv = tenv->next;
+				}
 			}
 			i++;
 		}
 		tmp = tmp->next;
 	}
-	return 0;
+	return (0);
 }
-
 
 static int get_var_len(char *str, int start, t_env *env, int flag)
 {

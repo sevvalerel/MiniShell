@@ -1,33 +1,41 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   expand_dolar_second.c                              :+:      :+:    :+:   */
+/*   connect_count_malloc.c                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/24 16:51:59 by seerel            #+#    #+#             */
-/*   Updated: 2025/08/24 17:04:33 by seerel           ###   ########.fr       */
+/*   Created: 2025/08/24 19:20:50 by seerel            #+#    #+#             */
+/*   Updated: 2025/08/24 19:28:30 by seerel           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int	skip_expansion(t_general *node, int i)
-{
-	return (i > 0 && node->acces_args->args[i - 1]
-		&& ft_strcmp(node->acces_args->args[i - 1]->str, "<<") == 0
-		&& (node->acces_args->args[i - 1]->flag == 5
-			|| node->acces_args->args[i - 1]->flag == 2));
-}
-
-void	expand_dolar(t_general *list, t_env *env)
+void	connect_count_malloc(t_general *list)
 {
 	t_general	*tmp;
+	int			i;
 
 	tmp = list;
 	while (tmp)
 	{
-		expand_args_in_node(tmp, env);
+		i = 0;
+		while (tmp->acces_args->args[i])
+		{
+			if (tmp->acces_args->args[i]->s == 0
+				&& tmp->acces_args->args[i + 1])
+			{
+				if (should_skip_redirection(tmp->acces_args->args, i))
+				{
+					i++;
+					continue ;
+				}
+				process_adjacent_args(tmp->acces_args->args, i);
+				continue ;
+			}
+			i++;
+		}
 		tmp = tmp->next;
 	}
 }

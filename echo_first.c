@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   echo_first.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/11 15:06:07 by bucolak           #+#    #+#             */
-/*   Updated: 2025/08/24 14:19:53 by bucolak          ###   ########.fr       */
+/*   Updated: 2025/08/26 09:49:28 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,8 +52,8 @@ void	echo_flag_1(t_general *tmp, int i)
 	str = tmp->acces_args->args[i]->str;
 	while (str[j])
 	{
-		if (str[j] == '\'' && str[j + 1] && str[j + 1] == '\''
-			&& (!j || str[j - 1] == '\''))
+		if (str[j] == '\'' && str[j + 1] && str[j + 1] == '\'' && (!j || str[j
+					- 1] == '\''))
 		{
 			if (tmp->acces_args->args[i + 1])
 				ft_putchar_fd(' ', 1);

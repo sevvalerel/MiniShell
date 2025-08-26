@@ -3,22 +3,22 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seerel <seerel@student.42.fr>              +#+  +:+       +#+        */
+/*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/14 16:22:33 by bucolak           #+#    #+#             */
-/*   Updated: 2025/08/24 19:43:24 by seerel           ###   ########.fr       */
+/*   Updated: 2025/08/24 21:22:14 by bucolak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-volatile int	signal_ec = 0;
+volatile int	g_signal_ec = 0;
 
 void	handle_signal(int signo)
 {
 	if (signo == SIGINT)
 	{
-		signal_ec = 1;
+		g_signal_ec = 1;
 		write(1, "\n", 1);
 		rl_on_new_line();
 		rl_replace_line("", 0);
@@ -40,24 +40,29 @@ void	end_loop_main(t_now *get, t_general **pipe_blocs, char *line,
 
 void	main_ctrlc_control(int *last_dqm, t_general *pipe_blocs)
 {
-	if (signal_ec == 1)
+	if (g_signal_ec == 1)
 	{
 		*last_dqm = 130;
 		pipe_blocs->dqm = 130;
-		signal_ec = 0;
+		g_signal_ec = 0;
 	}
 }
 
-void	main_loop_first(int *last_dqm, t_general **pipe_blocs, char **line)
+void	main_loop_first(t_state *st, char **line)
 {
 	signal_handler();
-	*pipe_blocs = create_general_node(*last_dqm);
+	st->pipe_blocs = create_general_node(st->last_dqm);
 	*line = readline("Our_shell% ");
-	if (signal_ec == 1)
+	if (g_signal_ec == 1)
 	{
-		*last_dqm = 130;
-		(*pipe_blocs)->dqm = 130;
-		signal_ec = 0;
+		st->last_dqm = 130;
+		st->pipe_blocs->dqm = 130;
+		g_signal_ec = 0;
+	}
+	if (!*line)
+	{
+		ctrld_free_handler(&st->get, &st->env, &st->pipe);
+		ctrld_free_exit(&st->pipe_blocs);
 	}
 }
 
@@ -74,18 +79,14 @@ int	main(int argc, char *argv[], char **envp)
 	init_env(&st.env, envp, &st.full, &first_run);
 	while (1)
 	{
-		main_loop_first(&st.last_dqm, &st.pipe_blocs, &line);
-		if (!line)
-		{
-			ctrld_free_handler(&st.get, &st.env, &st.pipe);
-			ctrld_free_exit(&st.pipe_blocs);
-		}
+		main_loop_first(&st, &line);
 		if (main_line_ctrl_scnd(line, &st.pipe_blocs) == 1)
 			continue ;
-		if(apply_parser(line, st.pipe_blocs, st.env, &st.full) == 1)
+		if (apply_parser(line, st.pipe_blocs, st.env, &st.full) == 1)
 		{
+			free(line);
 			free_pipe_blocks(st.pipe_blocs);
-			continue;
+			continue ;
 		}
 		fill_get(&st.get, st.env, &st.full);
 		apply_pipe(st.pipe_blocs, &st.pipe, &st.full, &st.env);

@@ -6,13 +6,13 @@
 /*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/24 16:22:24 by bucolak           #+#    #+#             */
-/*   Updated: 2025/08/24 16:28:56 by bucolak          ###   ########.fr       */
+/*   Updated: 2025/08/25 21:37:27 by bucolak          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-int	is_redireciton2(char *str)
+int	is_redireciton_two(char *str)
 {
 	if (*str == '>' || *str == '<')
 		return (1);
@@ -85,4 +85,31 @@ int	count_args(const char *str)
 		}
 	}
 	return (count);
+}
+
+char	*clean_double_quotes(char *str)
+{
+	int		i;
+	int		j;
+	char	*new;
+
+	i = 0;
+	j = 0;
+	while (str[i] && str[i] != ' ')
+	{
+		if (str[i] == '"')
+			j++;
+		i++;
+	}
+	new = malloc(sizeof(char) * (i - j + 1));
+	i = 0;
+	j = 0;
+	while (str[i] && str[i] != ' ')
+	{
+		if (str[i] != '"' && str[i] != '\'')
+			new[j++] = str[i];
+		i++;
+	}
+	new[j] = '\0';
+	return (new);
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cd_cmd.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: bucolak <bucolak@student.42.fr>            +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/24 13:25:16 by bucolak           #+#    #+#             */
-/*   Updated: 2025/08/24 14:03:17 by bucolak          ###   ########.fr       */
+/*   Updated: 2025/08/26 11:59:32 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 
 static void	update_cd_helper(t_env *tmp, t_env *env)
 {
+	char	*cwd;
+
 	while (tmp)
 	{
 		if (ft_strcmp(tmp->key, "OLDPWD") == 0)
@@ -30,9 +32,8 @@ static void	update_cd_helper(t_env *tmp, t_env *env)
 	{
 		if (ft_strcmp(tmp->key, "PWD") == 0)
 		{
-			if (tmp->data)
-				free(tmp->data);
-			tmp->data = getcwd(NULL, 0);
+			cwd = getcwd(NULL, 0);
+			update_cd_helper_scnd(cwd, tmp);
 			break ;
 		}
 		tmp = tmp->next;
@@ -59,7 +60,7 @@ static void	cd_helper(t_arg **args, char *env_name, t_general *pipe_blocks,
 	update_cd_helper(tmp, env);
 }
 
-static	void cd_dash_control_scnd(t_env *tmp, char *new_oldpwd, char *old_pwd)
+static void	cd_dash_control_scnd(t_env *tmp, char *new_oldpwd, char *old_pwd)
 {
 	while (tmp)
 	{
@@ -90,15 +91,15 @@ static void	cd_dash_control(t_env *env)
 	pwd = ft_strdup(get_getenv(env, "PWD"));
 	new_oldpwd = ft_strdup(pwd);
 	tmp = env;
-	cd_dash_control_scnd(tmp, new_oldpwd, old_pwd);
-	if (pwd)
-		free(pwd);
-	if (old_pwd)
-		free(old_pwd);
-	ft_putstr_fd(new_oldpwd, 1);
+	ft_putstr_fd(old_pwd, 1);
 	ft_putchar_fd('\n', 1);
 	if (get_getenv(env, "OLDPWD"))
 		chdir(get_getenv(env, "OLDPWD"));
+	cd_dash_control_scnd(tmp, new_oldpwd, old_pwd);	
+		if (pwd)
+		free(pwd);
+	if (old_pwd)
+		free(old_pwd);
 }
 
 void	cd_cmd(t_arg **args, t_env *env, t_general *pipe_blocks)
@@ -112,6 +113,12 @@ void	cd_cmd(t_arg **args, t_env *env, t_general *pipe_blocks)
 		line = get_getenv(env, "HOME");
 		if (line)
 			chdir(line);
+		else
+		{
+			ft_putstr_fd("bash: cd: HOME not set\n", 2);
+			pipe_blocks->dqm = 1;
+			return ;
+		}
 	}
 	else if (ft_strcmp(args[1]->str, "-") == 0)
 		cd_dash_control(env);
